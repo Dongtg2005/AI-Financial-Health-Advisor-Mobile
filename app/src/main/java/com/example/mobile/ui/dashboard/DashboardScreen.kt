@@ -45,9 +45,13 @@ fun DashboardScreen(
         AddTransactionSheet(
             onDismiss = { showSheet = false },
             onConfirm = { amount, note, category ->
-                // TODO: Xử lý lưu giao dịch vào ViewModel
                 showSheet = false
-                viewModel.triggerMockInsight(amount.toDoubleOrNull() ?: 180000.0)
+                viewModel.saveTransaction(
+                    amount = amount.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO,
+                    note = note,
+                    category = category,
+                    type = com.example.mobile.data.network.dto.TransactionType.EXPENSE
+                )
             }
         )
     }

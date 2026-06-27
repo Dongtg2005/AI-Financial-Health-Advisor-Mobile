@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mobile.data.local.TokenManager
 import com.example.mobile.data.network.NetworkModule
 import com.example.mobile.data.network.DebtApiService
+import com.example.mobile.data.network.TransactionApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +23,7 @@ data class ScoreBreakdown(
 data class DashboardUiState(
     val userName: String = "Đông",
     val isLoading: Boolean = false,
+    val errorMessage: String? = null,
     val healthScore: Int = 100,
     val totalSpent: Long = 0,
     val totalBudget: Long = 0,
@@ -56,6 +58,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private val apiService = NetworkModule.createService(application, DebtApiService::class.java)
+    private val transactionApiService = NetworkModule.createService(application, TransactionApiService::class.java)
     private val tokenManager = TokenManager(application)
 
     init {
@@ -131,27 +134,71 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun triggerMockInsight(amount: Double) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                showInsightPopup = true,
-                currentInsightData = com.example.mobile.data.network.dto.MicroInsight(
-                    shouldShow = true,
-                    type = "DAILY_PROJECTION",
-                    title = "Gợi ý phân tích từ Trợ lý AI 💡",
-                    todayTotalAmount = amount,
-                    projectedMonthlyAmount = amount * 30,
-                    message = "Hôm nay bạn đã chi **180.000đ**. Nếu ngày nào cũng tương tự, tháng này bạn sẽ tiêu khoảng **5.400.000đ** chỉ cho các khoản này.",
-                    tone = "NEUTRAL"
+    fun saveTransaction(amount: java.math.BigDecimal, note: String, category: String, type: com.example.mobile.data.network.dto.TransactionType) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            
+            try {
+                val request = com.example.mobile.data.network.dto.TransactionRequestDTO(
+                    amount = amount,
+                    category = category,
+                    type = type.name, // "EXPENSE" hoặc "INCOME"
+                    transactionAt = null // Để Backend tự sinh theo giờ VN nếu trống
                 )
-            )
+
+                val response = transactionApiService.createTransaction(request)
+
+                // Kiểm tra xem Backend có kích hoạt trả về MicroInsight (lần nhập thứ 3) hay không
+                val insightFromServer = response.microInsight
+                if (insightFromServer != null && insightFromServer.shouldShow) {
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false,
+                            showInsightPopup = true,
+                            currentInsightData = insightFromServer
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+                
+                // Cập nhật lại số tiền đã chi tiêu (nếu là chi tiêu)
+                if (type == com.example.mobile.data.network.dto.TransactionType.EXPENSE) {
+                    val addedAmount = amount.toLong()
+                    _uiState.update { currentState ->
+                        val updatedSpent = currentState.totalSpent + addedAmount
+                        // Cập nhật chi tiết danh mục
+                        val updatedCategories = currentState.budgetCategories.map { cat ->
+                            val isMatch = when (category.lowercase()) {
+                                "food" -> cat.name == "Ăn uống"
+                                "transport" -> cat.name == "Đi lại"
+                                "shopping" -> cat.name == "Mua sắm"
+                                else -> cat.name == "Khác"
+                            }
+                            if (isMatch) {
+                                cat.copy(spent = cat.spent + addedAmount)
+                            } else {
+                                cat
+                            }
+                        }
+                        currentState.copy(
+                            totalSpent = updatedSpent,
+                            budgetCategories = updatedCategories
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.localizedMessage ?: "Lỗi kết nối Internet") }
+                e.printStackTrace()
+            }
         }
     }
 
     fun dismissInsightPopup() {
         _uiState.update { currentState ->
             currentState.copy(
-                showInsightPopup = false
+                showInsightPopup = false,
+                currentInsightData = null
             )
         }
     }
