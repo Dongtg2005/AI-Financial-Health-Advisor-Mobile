@@ -157,10 +157,11 @@ fun DashboardScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(24.dp)
                         ) {
-                            HealthScoreRing(
+                            HealthScoreCircle(
                                 score = state.healthScore,
-                                ringSize = 220.dp,
-                                strokeWidth = 18.dp
+                                breakdown = state.scoreBreakdown,
+                                sizeDp = 220,
+                                strokeWidthDp = 18f
                             )
 
                             Text(
