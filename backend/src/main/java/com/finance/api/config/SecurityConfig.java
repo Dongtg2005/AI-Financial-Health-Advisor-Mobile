@@ -33,12 +33,13 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
-                // Cho phép gọi các API login/auth và Swagger không cần authenticate
+                // Cho phép gọi các API login/auth, Swagger và gợi ý ngân sách không cần authenticate
                 .requestMatchers(
                     "/api/v1/auth/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
-                    "/swagger-ui.html"
+                    "/swagger-ui.html",
+                    "/api/v1/budgets/suggestion"
                 ).permitAll()
                 // Các request khác cần được xác thực
                 .anyRequest().authenticated()
