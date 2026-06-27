@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -23,12 +24,26 @@ fun AlertCard(
     visible: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val isCritical = title.contains("CẢNH BÁO") || title.contains("NGUY HIỂM")
+    val isWarning = title.contains("THẺ TÍN DỤNG") || title.contains("ĐẾN HẠN")
+    
+    val themeColor = when {
+        isCritical -> RedDanger
+        isWarning -> AmberWarning
+        else -> Blue40 // Xanh dương thanh lịch cho Gợi ý ngân sách
+    }
+    
+    val icon = when {
+        isCritical || isWarning -> Icons.Rounded.Warning
+        else -> Icons.Rounded.Info
+    }
+
     AnimatedVisibility(
         visible = visible,
         enter   = fadeIn() + expandVertically(),
         exit    = fadeOut() + shrinkVertically()
     ) {
-        // Sử dụng GlassCard với sắc đỏ nhẹ để đồng bộ DNA kính mờ
+        // Sử dụng GlassCard với sắc đỏ/vàng/xanh nhẹ để đồng bộ DNA kính mờ
         GlassCard(
             modifier = modifier.fillMaxWidth()
         ) {
@@ -40,13 +55,13 @@ fun AlertCard(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .background(RedDanger.copy(alpha = 0.15f)),
+                        .background(themeColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Warning,
+                        imageVector = icon,
                         contentDescription = null,
-                        tint = RedDanger,
+                        tint = themeColor,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -55,7 +70,7 @@ fun AlertCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.labelLarge,
-                        color = RedDanger,
+                        color = themeColor,
                         fontWeight = FontWeight.W800
                     )
                     Text(

@@ -3,6 +3,7 @@ package com.example.mobile.ui.dashboard
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mobile.data.local.TokenManager
 import com.example.mobile.data.network.NetworkModule
 import com.example.mobile.data.network.DebtApiService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,33 +54,31 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private val apiService = NetworkModule.createService(application, DebtApiService::class.java)
+    private val tokenManager = TokenManager(application)
 
     init {
-        loadDashboard()
+        loadDashboardInitialData()
     }
 
-    private fun loadDashboard() {
+    private fun loadDashboardInitialData() {
+        val savedBudget = tokenManager.getSuggestedBudget()
+        val savedMessage = tokenManager.getSuggestedMessage()
+
         _uiState.value = DashboardUiState(
             healthScore = 100,
             scoreBreakdown = ScoreBreakdown(35, 35, 20, 10),
-            hasAlert = true,
-            alertTitle = "Thẻ tín dụng sắp đến hạn",
-            alertMessage = "Visa VCB đến hạn sau 3 ngày — cần thanh toán 8.500.000đ",
-            totalSpent = 7_200_000,
-            totalBudget = 10_000_000,
+            totalBudget = if (savedBudget > 0) savedBudget.toLong() else 10_000_000L,
+            totalSpent = 0L, // Bắt đầu chi tiêu từ 0đ sau khi onboarding xong
+            hasAlert = !savedMessage.isNullOrEmpty(),
+            alertTitle = "GỢI Ý NGÂN SÁCH ONBOARDING",
+            alertMessage = savedMessage ?: "",
             budgetCategories = listOf(
-                BudgetCategoryUi("Ăn uống",  2_975_000, 3_500_000),
-                BudgetCategoryUi("Đi lại",     450_000, 1_000_000),
-                BudgetCategoryUi("Mua sắm",  1_200_000, 2_000_000),
-                BudgetCategoryUi("Khác",       575_000, 1_500_000)
+                BudgetCategoryUi("Ăn uống",  0, if (savedBudget > 0) (savedBudget * 0.35).toLong() else 3_500_000),
+                BudgetCategoryUi("Đi lại",     0, if (savedBudget > 0) (savedBudget * 0.10).toLong() else 1_000_000),
+                BudgetCategoryUi("Mua sắm",  0, if (savedBudget > 0) (savedBudget * 0.15).toLong() else 2_000_000),
+                BudgetCategoryUi("Khác",       0, if (savedBudget > 0) (savedBudget * 0.40).toLong() else 1_500_000)
             ),
-            recentTransactions = listOf(
-                TransactionUi("1", "Tiền hoa hồng tháng 6",           "Hôm nay, 09:00",    12_000_000, true,  "income"),
-                TransactionUi("2", "Vé xe giường nằm về Phú Tân",     "Hôm qua, 20:15",       320_000, false, "transport"),
-                TransactionUi("3", "Cà phê cuối tuần",                 "21/06, 08:30",          65_000, false, "food"),
-                TransactionUi("4", "Shopee — Mua sắm online",          "20/06, 23:45",         450_000, false, "shopping"),
-                TransactionUi("5", "Trả nợ thẻ tín dụng VCB",         "18/06, 10:00",       2_000_000, false, "debt")
-            )
+            recentTransactions = emptyList() // Bắt đầu danh sách trống sau khi onboarding
         )
     }
 
@@ -110,9 +109,14 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                             isLoading = false,
                             healthScore = newHealthScore,
                             scoreBreakdown = breakdown,
-                            hasAlert = firstAlert != null,
-                            alertTitle = if (firstAlert?.type == "CRITICAL") "CẢNH BÁO NGUY HIỂM!" else "THẺ TÍN DỤNG SẠP ĐẾN HẠN",
-                            alertMessage = firstAlert?.message ?: ""
+                            // Quy tắc ưu tiên: Nếu Backend có cảnh báo nợ (CRITICAL/WARNING) thì đè lên câu nhắc Onboarding ban đầu
+                            hasAlert = firstAlert != null || !tokenManager.getSuggestedMessage().isNullOrEmpty(),
+                            alertTitle = when {
+                                firstAlert?.type == "CRITICAL" -> "CẢNH BÁO NGUY HIỂM!"
+                                firstAlert?.type == "WARNING" -> "THẺ TÍN DỤNG SẮP ĐẾN HẠN"
+                                else -> "GỢI Ý NGÂN SÁCH ONBOARDING"
+                            },
+                            alertMessage = firstAlert?.message ?: tokenManager.getSuggestedMessage() ?: ""
                         )
                     }
                 } else {
