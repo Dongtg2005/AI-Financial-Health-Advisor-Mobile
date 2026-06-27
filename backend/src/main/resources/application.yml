@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: backend
+
+  # Database connection details
+  datasource:
+    url: jdbc:postgresql://localhost:5432/finance_db
+    username: postgres
+    password: password_cua_ban
+    driver-class-name: org.postgresql.Driver
+
+  # JPA / Hibernate settings
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  # Flyway migration settings
+  flyway:
+    baseline-on-migrate: true
