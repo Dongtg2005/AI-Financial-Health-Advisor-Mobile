@@ -10,10 +10,12 @@ import com.example.mobile.ui.dashboard.DashboardScreen
 import com.example.mobile.ui.transactions.TransactionsScreen
 import com.example.mobile.ui.profile.ProfileScreen
 import com.example.mobile.ui.settings.SettingsScreen
+import com.example.mobile.ui.onboarding.OnboardingScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
+    object Onboarding : Screen("onboarding")
     object Dashboard : Screen("dashboard")
     object Transactions : Screen("transactions")
     object Profile : Screen("profile")
@@ -29,6 +31,15 @@ fun AppNavigation() {
         }
         composable(Screen.Register.route) {
             RegisterScreen(navController)
+        }
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                onOnboardingComplete = { income ->
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Screen.Dashboard.route) {
             DashboardScreen(

@@ -34,4 +34,19 @@ class TokenManager(context: Context) {
     fun clearToken() {
         sharedPreferences.edit().remove(TOKEN_KEY).apply()
     }
+
+    fun saveSuggestedBudget(amount: Double, message: String) {
+        sharedPreferences.edit()
+            .putFloat("suggested_budget", amount.toFloat())
+            .putString("suggested_message", message)
+            .apply()
+    }
+
+    fun getSuggestedBudget(): Double {
+        return sharedPreferences.getFloat("suggested_budget", 0f).toDouble()
+    }
+
+    fun getSuggestedMessage(): String? {
+        return sharedPreferences.getString("suggested_message", null)
+    }
 }
