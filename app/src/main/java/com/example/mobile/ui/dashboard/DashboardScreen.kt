@@ -36,6 +36,7 @@ fun DashboardScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     var showSheet by remember { mutableStateOf(false) }
+    var showCashEstimateSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.fetchDebtSummary()
@@ -51,6 +52,19 @@ fun DashboardScreen(
                     note = note,
                     category = category,
                     type = com.example.mobile.data.network.dto.TransactionType.EXPENSE
+                )
+            }
+        )
+    }
+
+    if (showCashEstimateSheet) {
+        WeeklyCashEstimateSheet(
+            onDismiss = { showCashEstimateSheet = false },
+            onConfirm = { totalAmount, category ->
+                viewModel.submitWeeklyCashEstimate(
+                    totalAmount = totalAmount,
+                    category = category,
+                    onSuccess = { showCashEstimateSheet = false }
                 )
             }
         )
@@ -187,7 +201,12 @@ fun DashboardScreen(
                     AlertCard(
                         title = state.alertTitle,
                         message = state.alertMessage,
-                        visible = state.hasAlert
+                        visible = state.hasAlert,
+                        onClick = {
+                            if (state.alertTitle.contains("cuối tuần") || state.alertTitle.contains("TIỀN MẶT") || state.alertTitle.contains("TỔNG KẾT")) {
+                                showCashEstimateSheet = true
+                            }
+                        }
                     )
                 }
 

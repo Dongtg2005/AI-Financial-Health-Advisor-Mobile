@@ -2,6 +2,7 @@ package com.example.mobile.ui.dashboard.components
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Info
@@ -23,6 +24,7 @@ fun AlertCard(
     message: String,
     visible: Boolean,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     val isCritical = title.contains("CẢNH BÁO") || title.contains("NGUY HIỂM")
     val isWarning = title.contains("THẺ TÍN DỤNG") || title.contains("ĐẾN HẠN")
@@ -45,7 +47,11 @@ fun AlertCard(
     ) {
         // Sử dụng GlassCard với sắc đỏ/vàng/xanh nhẹ để đồng bộ DNA kính mờ
         GlassCard(
-            modifier = modifier.fillMaxWidth()
+            modifier = if (onClick != null) {
+                modifier.fillMaxWidth().clickable { onClick() }
+            } else {
+                modifier.fillMaxWidth()
+            }
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
