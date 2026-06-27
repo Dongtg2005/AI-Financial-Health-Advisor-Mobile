@@ -26,4 +26,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     // Tính tổng số tiền đã chi trong ngày hôm nay của User
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = com.finance.api.entity.TransactionType.EXPENSE AND t.transactionAt >= :startOfDay")
     BigDecimal sumTodayExpensesAmount(@Param("userId") UUID userId, @Param("startOfDay") LocalDateTime startOfDay);
+
+    // Tính tổng chi tiêu của User trong một khoảng thời gian
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = com.finance.api.entity.TransactionType.EXPENSE AND t.transactionAt BETWEEN :startDateTime AND :endDateTime")
+    BigDecimal sumSpentByUserIdAndPeriod(@Param("userId") UUID userId, @Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime);
+
+    // Đếm số ngày duy nhất người dùng đã xác nhận giao dịch trong khoảng thời gian
+    @Query("SELECT COUNT(DISTINCT CAST(t.transactionAt AS date)) FROM Transaction t WHERE t.user.id = :userId AND t.isConfirmed = true AND t.transactionAt BETWEEN :startDateTime AND :endDateTime")
+    long countDaysWithConfirmedTransactions(@Param("userId") UUID userId, @Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime);
 }

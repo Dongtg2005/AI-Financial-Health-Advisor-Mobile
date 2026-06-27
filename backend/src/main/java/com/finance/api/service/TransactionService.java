@@ -30,10 +30,12 @@ public class TransactionService {
     private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final HealthScoreService healthScoreService;
 
-    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository) {
+    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository, HealthScoreService healthScoreService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
+        this.healthScoreService = healthScoreService;
     }
 
     private LocalDateTime toSystemDefault(LocalDateTime vnDateTime) {
@@ -106,7 +108,10 @@ public class TransactionService {
             }
         }
 
-        // 5. Trả về Response hỗn hợp chuẩn hợp đồng
+        // 5. Tính toán động điểm Health Score ngay khi phát sinh giao dịch
+        healthScoreService.updateAndGetHealthScore(userId);
+
+        // 6. Trả về Response hỗn hợp chuẩn hợp đồng
         TransactionSaveResponse.TransactionData data = new TransactionSaveResponse.TransactionData(
             transaction.getId(), transaction.getAmount(), transaction.getCategory()
         );
@@ -159,5 +164,8 @@ public class TransactionService {
 
         // 5. Sử dụng Batch Insert để lưu nhanh chóng 7 bản ghi cùng lúc vào Database
         transactionRepository.saveAll(cashTransactions);
+
+        // 6. Tính toán động điểm Health Score ngay khi phân bổ xong
+        healthScoreService.updateAndGetHealthScore(userId);
     }
 }

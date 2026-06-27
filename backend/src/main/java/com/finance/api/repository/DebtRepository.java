@@ -25,4 +25,12 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
             @Param("today") LocalDate today, 
             @Param("targetDate") LocalDate targetDate
     );
+
+    // Đếm số khoản nợ trễ hạn thanh toán của user
+    @Query("SELECT COUNT(d) FROM Debt d WHERE d.user.id = :userId AND d.isActive = true AND d.overdueSince IS NOT NULL")
+    long countOverdueDebts(@Param("userId") UUID userId);
+
+    // Đếm số khoản nợ sắp đến hạn trong tuần tới của user
+    @Query("SELECT COUNT(d) FROM Debt d WHERE d.user.id = :userId AND d.isActive = true AND d.dueDate BETWEEN :startDate AND :endDate")
+    long countUpcomingDebtsInWeek(@Param("userId") UUID userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

@@ -49,6 +49,24 @@ public class User implements UserDetails {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "suggested_budget")
+    private BigDecimal suggestedBudget;
+
+    @Column(name = "health_score")
+    private int healthScore = 100;
+
+    @Column(name = "score_spending")
+    private int scoreSpending = 35;
+
+    @Column(name = "score_debt")
+    private int scoreDebt = 35;
+
+    @Column(name = "score_saving")
+    private int scoreSaving = 20;
+
+    @Column(name = "score_awareness")
+    private int scoreAwareness = 10;
+
     // Constructors
     public User() {
     }
@@ -154,5 +172,53 @@ public class User implements UserDetails {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public BigDecimal getSuggestedBudget() {
+        return suggestedBudget;
+    }
+
+    public void setSuggestedBudget(BigDecimal suggestedBudget) {
+        this.suggestedBudget = suggestedBudget;
+    }
+
+    public int getHealthScore() {
+        return healthScore;
+    }
+
+    public void setHealthScore(int healthScore) {
+        this.healthScore = healthScore;
+    }
+
+    public int getScoreSpending() {
+        return scoreSpending;
+    }
+
+    public void setScoreSpending(int scoreSpending) {
+        this.scoreSpending = scoreSpending;
+    }
+
+    public int getScoreDebt() {
+        return scoreDebt;
+    }
+
+    public void setScoreDebt(int scoreDebt) {
+        this.scoreDebt = scoreDebt;
+    }
+
+    public int getScoreSaving() {
+        return scoreSaving;
+    }
+
+    public void setScoreSaving(int scoreSaving) {
+        this.scoreSaving = scoreSaving;
+    }
+
+    public int getScoreAwareness() {
+        return scoreAwareness;
+    }
+
+    public void setScoreAwareness(int scoreAwareness) {
+        this.scoreAwareness = scoreAwareness;
     }
 }
