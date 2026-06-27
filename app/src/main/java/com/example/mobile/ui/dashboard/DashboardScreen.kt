@@ -211,6 +211,14 @@ fun DashboardScreen(
                     )
                 }
 
+                // BIỂU ĐỒ CỘT ĐÔI: So sánh động Chi tiêu vs Hạn mức từ dữ liệu live Backend
+                item {
+                    CategoryCompareChart(
+                        categories = state.budgetCategories,
+                        heightDp = 180
+                    )
+                }
+
                 item {
                     BudgetCard(
                         totalSpent = state.totalSpent,
