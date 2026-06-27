@@ -92,49 +92,62 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         )
     }
 
-    fun fetchDebtSummary() {
+    /**
+     * TẢI DỮ LIỆU ĐỒNG BỘ LIVE SỨC KHỎE TÀI CHÍNH TỪ DATABASE BACKEND
+     */
+    fun fetchDashboardData() {
         viewModelScope.launch {
             try {
                 _uiState.update { it.copy(isLoading = true) }
-                val response = apiService.getDebtSummary()
+                
+                // Gọi API tổng hợp mới từ Server
+                val response = apiService.getDashboardSummary()
                 
                 if (response.status == 200 && response.data != null) {
-                    val summary = response.data
-                    val firstAlert = summary.alerts.firstOrNull()
+                    val serverData = response.data
+                    val firstAlert = serverData.alerts.firstOrNull()
                     
-                    // 1. Thực thi Quy tắc tử huyệt của Yếu tố 2 (Điểm DTI về 0 lập tức nếu có trễ hạn)
-                    val calculatedDebtScore = if (summary.overdueCount > 0) {
-                        0 
-                    } else {
-                        // Tính động dựa trên các khoản nợ sắp đến hạn trong tuần
-                        Math.max(10, 35 - (summary.upcomingCount * 5))
-                    }
-
-                    // 2. Tính toán lại điểm tổng Health Score từ breakdown mới
-                    val breakdown = _uiState.value.scoreBreakdown.copy(debt = calculatedDebtScore)
-                    val newHealthScore = breakdown.spending + breakdown.debt + breakdown.saving + breakdown.awareness
-
                     _uiState.update { currentState ->
                         currentState.copy(
                             isLoading = false,
-                            healthScore = newHealthScore,
-                            scoreBreakdown = breakdown,
-                            // Quy tắc ưu tiên: Nếu Backend có cảnh báo nợ (CRITICAL/WARNING) thì đè lên câu nhắc Onboarding ban đầu
+                            userName = serverData.userName,
+                            healthScore = serverData.healthScore, // Điểm tổng live
+                            
+                            // Đấu nối trực tiếp 4 đầu điểm phân rã thực tế từ DB
+                            scoreBreakdown = ScoreBreakdown(
+                                spending = serverData.scoreSpending,
+                                debt = serverData.scoreDebt,
+                                saving = serverData.scoreSaving,
+                                awareness = serverData.scoreAwareness
+                            ),
+                            
+                            totalSpent = serverData.totalSpent,
+                            totalBudget = serverData.totalBudget,
                             hasAlert = firstAlert != null || !tokenManager.getSuggestedMessage().isNullOrEmpty(),
                             alertTitle = when {
                                 firstAlert?.type == "CRITICAL" -> "CẢNH BÁO NGUY HIỂM!"
                                 firstAlert?.type == "WARNING" -> "THẺ TÍN DỤNG SẮP ĐẾN HẠN"
                                 else -> "GỢI Ý NGÂN SÁCH ONBOARDING"
                             },
-                            alertMessage = firstAlert?.message ?: tokenManager.getSuggestedMessage() ?: ""
+                            alertMessage = firstAlert?.message ?: tokenManager.getSuggestedMessage() ?: "",
+                            
+                            // Map danh mục chi tiêu thật từ DB lên UI
+                            budgetCategories = serverData.budgetCategories.map { dto ->
+                                BudgetCategoryUi(name = dto.name, spent = dto.spent, limit = dto.limit)
+                            }
                         )
                     }
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false) }
-                e.printStackTrace()
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        errorMessage = e.localizedMessage ?: "Không thể kết nối đồng bộ điểm sức khỏe"
+                    ) 
+                }
+                e.printStackTrace();
             }
         }
     }

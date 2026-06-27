@@ -39,7 +39,7 @@ fun DashboardScreen(
     var showCashEstimateSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.fetchDebtSummary()
+        viewModel.fetchDashboardData()
     }
 
     if (showSheet) {
