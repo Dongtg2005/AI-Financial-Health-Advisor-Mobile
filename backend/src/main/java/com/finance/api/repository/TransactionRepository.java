@@ -18,4 +18,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = :type")
     BigDecimal sumAmountByUserIdAndType(@Param("userId") UUID userId, @Param("type") TransactionType type);
+
+    // Đếm tổng số giao dịch chi tiêu trong ngày hôm nay của User
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.user.id = :userId AND t.type = com.finance.api.entity.TransactionType.EXPENSE AND t.transactionAt >= :startOfDay")
+    long countTodayExpenses(@Param("userId") UUID userId, @Param("startOfDay") LocalDateTime startOfDay);
+
+    // Tính tổng số tiền đã chi trong ngày hôm nay của User
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId AND t.type = com.finance.api.entity.TransactionType.EXPENSE AND t.transactionAt >= :startOfDay")
+    BigDecimal sumTodayExpensesAmount(@Param("userId") UUID userId, @Param("startOfDay") LocalDateTime startOfDay);
 }

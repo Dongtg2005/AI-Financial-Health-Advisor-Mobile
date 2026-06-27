@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import com.finance.api.dto.response.TransactionSaveResponse;
+
 @RestController
 @RequestMapping("/api/v1/transactions")
 public class TransactionController {
@@ -24,23 +26,16 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(
+    public ResponseEntity<TransactionSaveResponse> createTransaction(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody TransactionRequestDTO request) {
         
         UUID userId = ((User) userDetails).getId();
         
-        // Gọi Service xử lý
-        TransactionResponseDTO responseDTO = transactionService.createTransaction(userId, request);
+        // Gọi Service xử lý và lấy Response hỗn hợp chuẩn hợp đồng
+        TransactionSaveResponse saveResponse = transactionService.createTransaction(userId, request);
 
-        // Bọc kết quả vào ApiResponse chuẩn hóa
-        ApiResponse<TransactionResponseDTO> response = new ApiResponse<>(
-                201, 
-                "Tạo giao dịch thành công", 
-                responseDTO
-        );
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(saveResponse, HttpStatus.CREATED);
     }
 
     @GetMapping
