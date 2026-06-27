@@ -1,28 +1,35 @@
 package com.example.mobile.ui.dashboard
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.mobile.data.network.NetworkModule
+import com.example.mobile.data.network.DebtApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-data class DashboardUiState(
-    val isLoading: Boolean = false,
-    val userName: String = "Đông",
-    val healthScore: Int = 72,
-    val scoreBreakdown: ScoreBreakdown = ScoreBreakdown(),
-    val hasAlert: Boolean = true,
-    val alertTitle: String = "",
-    val alertMessage: String = "",
-    val totalSpent: Long = 7_200_000,
-    val totalBudget: Long = 10_000_000,
-    val budgetCategories: List<BudgetCategoryUi> = emptyList(),
-    val recentTransactions: List<TransactionUi> = emptyList()
-)
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class ScoreBreakdown(
-    val spending: Int = 25,
-    val debt: Int = 28,
-    val saving: Int = 12,
-    val awareness: Int = 7
+    val spending: Int = 35,
+    val debt: Int = 35,
+    val saving: Int = 20,
+    val awareness: Int = 10
+)
+
+data class DashboardUiState(
+    val userName: String = "Đông",
+    val isLoading: Boolean = false,
+    val healthScore: Int = 100,
+    val totalSpent: Long = 0,
+    val totalBudget: Long = 0,
+    val scoreBreakdown: ScoreBreakdown = ScoreBreakdown(),
+    val hasAlert: Boolean = false,
+    val alertTitle: String = "",
+    val alertMessage: String = "",
+    val budgetCategories: List<BudgetCategoryUi> = emptyList(),
+    val recentTransactions: List<TransactionUi> = emptyList()
 )
 
 data class BudgetCategoryUi(
@@ -40,10 +47,12 @@ data class TransactionUi(
     val category: String
 )
 
-class DashboardViewModel : ViewModel() {
+class DashboardViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
-    val uiState: StateFlow<DashboardUiState> = _uiState
+    val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+
+    private val apiService = NetworkModule.createService(application, DebtApiService::class.java)
 
     init {
         loadDashboard()
@@ -51,8 +60,8 @@ class DashboardViewModel : ViewModel() {
 
     private fun loadDashboard() {
         _uiState.value = DashboardUiState(
-            healthScore = 72,
-            scoreBreakdown = ScoreBreakdown(25, 28, 12, 7),
+            healthScore = 100,
+            scoreBreakdown = ScoreBreakdown(35, 35, 20, 10),
             hasAlert = true,
             alertTitle = "Thẻ tín dụng sắp đến hạn",
             alertMessage = "Visa VCB đến hạn sau 3 ngày — cần thanh toán 8.500.000đ",
@@ -72,5 +81,47 @@ class DashboardViewModel : ViewModel() {
                 TransactionUi("5", "Trả nợ thẻ tín dụng VCB",         "18/06, 10:00",       2_000_000, false, "debt")
             )
         )
+    }
+
+    fun fetchDebtSummary() {
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+                val response = apiService.getDebtSummary()
+                
+                if (response.status == 200 && response.data != null) {
+                    val summary = response.data
+                    val firstAlert = summary.alerts.firstOrNull()
+                    
+                    // 1. Thực thi Quy tắc tử huyệt của Yếu tố 2 (Điểm DTI về 0 lập tức nếu có trễ hạn)
+                    val calculatedDebtScore = if (summary.overdueCount > 0) {
+                        0 
+                    } else {
+                        // Tính động dựa trên các khoản nợ sắp đến hạn trong tuần
+                        Math.max(10, 35 - (summary.upcomingCount * 5))
+                    }
+
+                    // 2. Tính toán lại điểm tổng Health Score từ breakdown mới
+                    val breakdown = _uiState.value.scoreBreakdown.copy(debt = calculatedDebtScore)
+                    val newHealthScore = breakdown.spending + breakdown.debt + breakdown.saving + breakdown.awareness
+
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            isLoading = false,
+                            healthScore = newHealthScore,
+                            scoreBreakdown = breakdown,
+                            hasAlert = firstAlert != null,
+                            alertTitle = if (firstAlert?.type == "CRITICAL") "CẢNH BÁO NGUY HIỂM!" else "THẺ TÍN DỤNG SẠP ĐẾN HẠN",
+                            alertMessage = firstAlert?.message ?: ""
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false) }
+                e.printStackTrace()
+            }
+        }
     }
 }

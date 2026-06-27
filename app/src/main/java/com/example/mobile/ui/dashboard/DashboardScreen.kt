@@ -37,6 +37,10 @@ fun DashboardScreen(
     val state by viewModel.uiState.collectAsState()
     var showSheet by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        viewModel.fetchDebtSummary()
+    }
+
     if (showSheet) {
         AddTransactionSheet(
             onDismiss = { showSheet = false },
