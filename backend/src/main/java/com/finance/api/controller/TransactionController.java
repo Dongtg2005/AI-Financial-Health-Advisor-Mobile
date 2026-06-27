@@ -10,10 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.UUID;
-
+import com.finance.api.dto.request.CashWeeklyEstimateRequest;
 import com.finance.api.dto.response.TransactionSaveResponse;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/transactions")
@@ -54,6 +56,22 @@ public class TransactionController {
                 transactions
         );
 
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/cash-estimate")
+    public ResponseEntity<Map<String, Object>> createWeeklyCashEstimate(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody CashWeeklyEstimateRequest request) {
+        
+        UUID userId = ((User) userDetails).getId();
+        
+        transactionService.processWeeklyCashEstimate(userId, request);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", 200);
+        response.put("message", "Đã tiếp nhận ước tính cuối tuần. Hệ thống đã tự động phân bổ dòng tiền mặt.");
+        
         return ResponseEntity.ok(response);
     }
 }

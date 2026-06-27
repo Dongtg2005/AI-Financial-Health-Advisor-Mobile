@@ -1,20 +1,25 @@
 package com.finance.api.service;
 
+import com.finance.api.dto.request.CashWeeklyEstimateRequest;
 import com.finance.api.dto.request.TransactionRequestDTO;
 import com.finance.api.dto.response.TransactionResponseDTO;
 import com.finance.api.dto.response.TransactionSaveResponse;
+import com.finance.api.entity.EntryMethod;
 import com.finance.api.entity.Transaction;
+import com.finance.api.entity.TransactionType;
 import com.finance.api.entity.User;
 import com.finance.api.repository.TransactionRepository;
 import com.finance.api.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -106,5 +111,53 @@ public class TransactionService {
             transaction.getId(), transaction.getAmount(), transaction.getCategory()
         );
         return new TransactionSaveResponse(201, "Lưu giao dịch thành công.", data, insight);
+    }
+
+    /**
+     * TẦNG 2: ƯỚC TÍNH CUỐI TUẦN - TỰ ĐỘNG PHÂN BỔ CHI TIÊU TIỀN MẶT
+     */
+    @Transactional
+    public void processWeeklyCashEstimate(UUID userId, CashWeeklyEstimateRequest request) {
+        // 1. Tìm User
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy User với ID: " + userId));
+
+        if (request.getTotalAmount() == null || request.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+
+        // 2. Thuật toán phân bổ: Chia tổng số tiền cho 7 ngày trong tuần
+        BigDecimal dailyAmount = request.getTotalAmount().divide(BigDecimal.valueOf(7), 2, java.math.RoundingMode.HALF_UP);
+
+        // 3. Xác định mốc thời gian Thứ Hai tuần này dựa trên múi giờ Việt Nam
+        LocalDate today = LocalDate.now(VN_ZONE);
+        // Trừ đi số ngày lệch để tìm về ngày Thứ Hai đầu tuần
+        int dayOfWeekValue = today.getDayOfWeek().getValue(); // Thứ 2 = 1, ..., Chủ nhật = 7
+        LocalDate mondayOfThisWeek = today.minusDays(dayOfWeekValue - 1);
+
+        List<Transaction> cashTransactions = new ArrayList<>();
+
+        // 4. Lặp 7 lần để rải đều dữ liệu từ Thứ Hai đến Chủ Nhật
+        for (int i = 0; i < 7; i++) {
+            LocalDate targetDate = mondayOfThisWeek.plusDays(i);
+            
+            Transaction cashTx = new Transaction();
+            cashTx.setUser(user);
+            cashTx.setType(TransactionType.EXPENSE); // Luôn là chi tiêu
+            cashTx.setAmount(dailyAmount);
+            cashTx.setCategory(request.getCategory());
+            
+            // Đưa mốc thời gian VN về hệ múi giờ mặc định của JVM để lưu vào DB
+            LocalDateTime txTimeVn = targetDate.atTime(20, 0, 0);
+            cashTx.setTransactionAt(toSystemDefault(txTimeVn));
+            cashTx.setIsConfirmed(true); // User đã tự xác nhận ước tính
+            cashTx.setConfirmedAt(toSystemDefault(LocalDateTime.now(VN_ZONE)));
+            cashTx.setEntryMethod(EntryMethod.SUNDAY_ESTIMATE);
+            
+            cashTransactions.add(cashTx);
+        }
+
+        // 5. Sử dụng Batch Insert để lưu nhanh chóng 7 bản ghi cùng lúc vào Database
+        transactionRepository.saveAll(cashTransactions);
     }
 }
