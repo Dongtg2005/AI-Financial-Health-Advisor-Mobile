@@ -17,76 +17,45 @@ public class BankAppDetect {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "app_name", length = 50)
-    private String appName;
+    @Column(name = "app_package_name", nullable = false, length = 100)
+    private String appPackageName;
 
-    @Column(name = "session_id")
-    private UUID sessionId;
+    @Column(name = "bank_name", nullable = false, length = 50) 
+    private String bankName; // Lưu tên hiển thị: "Vietcombank", "MBBank", "TPBank" để UI dựng timeline chuẩn
 
-    @Column(name = "detected_time", nullable = false)
-    private LocalDateTime detectedTime;
+    @Column(name = "detected_at", nullable = false)
+    private LocalDateTime detectedAt;
 
-    @Column(name = "is_processed")
-    private Boolean isProcessed = false;
+    @Column(name = "is_processed", nullable = false)
+    private boolean processed = false;
 
     // Constructors
-    public BankAppDetect() {
-    }
+    public BankAppDetect() {}
 
-    public BankAppDetect(User user, String appName, UUID sessionId, LocalDateTime detectedTime, Boolean isProcessed) {
+    public BankAppDetect(User user, String appPackageName, String bankName, LocalDateTime detectedAt, boolean processed) {
         this.user = user;
-        this.appName = appName;
-        this.sessionId = sessionId;
-        this.detectedTime = detectedTime;
-        this.isProcessed = isProcessed;
+        this.appPackageName = appPackageName;
+        this.bankName = bankName;
+        this.detectedAt = detectedAt;
+        this.processed = processed;
     }
 
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
+    // --- MANUAL GETTERS & SETTERS ---
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-    public User getUser() {
-        return user;
-    }
+    public String getAppPackageName() { return appPackageName; }
+    public void setAppPackageName(String appPackageName) { this.appPackageName = appPackageName; }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    public String getBankName() { return bankName; }
+    public void setBankName(String bankName) { this.bankName = bankName; }
 
-    public String getAppName() {
-        return appName;
-    }
+    public LocalDateTime getDetectedAt() { return detectedAt; }
+    public void setDetectedAt(LocalDateTime detectedAt) { this.detectedAt = detectedAt; }
 
-    public void setAppName(String appName) {
-        this.appName = appName;
-    }
-
-    public UUID getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
-    }
-
-    public LocalDateTime getDetectedTime() {
-        return detectedTime;
-    }
-
-    public void setDetectedTime(LocalDateTime detectedTime) {
-        this.detectedTime = detectedTime;
-    }
-
-    public Boolean getIsProcessed() {
-        return isProcessed;
-    }
-
-    public void setIsProcessed(Boolean isProcessed) {
-        this.isProcessed = isProcessed;
-    }
+    public boolean isProcessed() { return processed; }
+    public void setProcessed(boolean processed) { this.processed = processed; }
 }
