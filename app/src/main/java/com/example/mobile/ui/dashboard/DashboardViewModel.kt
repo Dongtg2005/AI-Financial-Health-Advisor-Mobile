@@ -7,11 +7,16 @@ import com.example.mobile.data.local.TokenManager
 import com.example.mobile.data.network.NetworkModule
 import com.example.mobile.data.network.DebtApiService
 import com.example.mobile.data.network.TransactionApiService
+import com.example.mobile.data.network.dto.CashWeeklyEstimateRequest
+import com.example.mobile.data.network.dto.MicroInsight
+import com.example.mobile.data.network.dto.TransactionRequestDTO
+import com.example.mobile.data.network.dto.TransactionType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 
 data class ScoreBreakdown(
     val spending: Int = 35,
@@ -34,7 +39,7 @@ data class DashboardUiState(
     val budgetCategories: List<BudgetCategoryUi> = emptyList(),
     val recentTransactions: List<TransactionUi> = emptyList(),
     val showInsightPopup: Boolean = false,
-    val currentInsightData: com.example.mobile.data.network.dto.MicroInsight? = null
+    val currentInsightData: MicroInsight? = null
 )
 
 data class BudgetCategoryUi(
@@ -134,12 +139,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun saveTransaction(amount: java.math.BigDecimal, note: String, category: String, type: com.example.mobile.data.network.dto.TransactionType) {
+    fun saveTransaction(amount: BigDecimal, note: String, category: String, type: TransactionType) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             
             try {
-                val request = com.example.mobile.data.network.dto.TransactionRequestDTO(
+                val request = TransactionRequestDTO(
                     amount = amount,
                     category = category,
                     type = type.name, // "EXPENSE" hoặc "INCOME"
@@ -163,7 +168,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 }
                 
                 // Cập nhật lại số tiền đã chi tiêu (nếu là chi tiêu)
-                if (type == com.example.mobile.data.network.dto.TransactionType.EXPENSE) {
+                if (type == TransactionType.EXPENSE) {
                     val addedAmount = amount.toLong()
                     _uiState.update { currentState ->
                         val updatedSpent = currentState.totalSpent + addedAmount
@@ -200,6 +205,73 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 showInsightPopup = false,
                 currentInsightData = null
             )
+        }
+    }
+
+    /**
+     * TẦNG 2: GỬI ƯỚC TÍNH TIỀN MẶT CUỐI TUẦN LÊN SERVER ĐỂ PHÂN BỔ NGẦM
+     */
+    fun submitWeeklyCashEstimate(totalAmount: BigDecimal, category: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            // 1. Bật trạng thái Loading và xóa sạch lỗi cũ
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            
+            try {
+                // 2. Đóng gói DTO theo đúng giao ước Contract
+                val request = CashWeeklyEstimateRequest(
+                    totalAmount = totalAmount,
+                    category = category // Ví dụ: "FOOD", "TRANSPORT",...
+                )
+
+                // 3. Thực hiện bắn request lên mạng qua Retrofit
+                val response = transactionApiService.createWeeklyCashEstimate(request)
+
+                if (response.isSuccessful) {
+                    _uiState.update { it.copy(isLoading = false) }
+                    
+                    // 4. Kích hoạt Callback báo về cho View biết để đóng BottomSheet/Dialog
+                    onSuccess()
+                    
+                    // Cập nhật lại giao diện (Cộng dồn số tiền đã chi tiêu của tuần)
+                    val addedAmount = totalAmount.toLong()
+                    _uiState.update { currentState ->
+                        val updatedSpent = currentState.totalSpent + addedAmount
+                        val updatedCategories = currentState.budgetCategories.map { cat ->
+                            val isMatch = when (category.lowercase()) {
+                                "food" -> cat.name == "Ăn uống"
+                                "transport" -> cat.name == "Đi lại"
+                                "shopping" -> cat.name == "Mua sắm"
+                                else -> cat.name == "Khác"
+                            }
+                            if (isMatch) {
+                                cat.copy(spent = cat.spent + addedAmount)
+                            } else {
+                                cat
+                            }
+                        }
+                        currentState.copy(
+                            totalSpent = updatedSpent,
+                            budgetCategories = updatedCategories
+                        )
+                    }
+                } else {
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            errorMessage = "Lỗi từ Server: Không thể phân bổ tiền mặt (Mã ${response.code()})"
+                        ) 
+                    }
+                }
+            } catch (e: Exception) {
+                // 5. Bắt các lỗi mất kết nối Internet, Timeout...
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        errorMessage = e.localizedMessage ?: "Lỗi kết nối đến máy chủ"
+                    ) 
+                }
+                e.printStackTrace()
+            }
         }
     }
 }
