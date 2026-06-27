@@ -47,6 +47,7 @@ fun DashboardScreen(
             onConfirm = { amount, note, category ->
                 // TODO: Xử lý lưu giao dịch vào ViewModel
                 showSheet = false
+                viewModel.triggerMockInsight(amount.toDoubleOrNull() ?: 180000.0)
             }
         )
     }
@@ -241,6 +242,12 @@ fun DashboardScreen(
                     }
                 }
             }
+        }
+        if (state.showInsightPopup && state.currentInsightData != null) {
+            com.example.mobile.ui.components.MicroInsightDialog(
+                insight = state.currentInsightData!!,
+                onDismiss = { viewModel.dismissInsightPopup() }
+            )
         }
     }
 }

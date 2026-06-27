@@ -30,7 +30,9 @@ data class DashboardUiState(
     val alertTitle: String = "",
     val alertMessage: String = "",
     val budgetCategories: List<BudgetCategoryUi> = emptyList(),
-    val recentTransactions: List<TransactionUi> = emptyList()
+    val recentTransactions: List<TransactionUi> = emptyList(),
+    val showInsightPopup: Boolean = false,
+    val currentInsightData: com.example.mobile.data.network.dto.MicroInsight? = null
 )
 
 data class BudgetCategoryUi(
@@ -126,6 +128,31 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 _uiState.update { it.copy(isLoading = false) }
                 e.printStackTrace()
             }
+        }
+    }
+
+    fun triggerMockInsight(amount: Double) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                showInsightPopup = true,
+                currentInsightData = com.example.mobile.data.network.dto.MicroInsight(
+                    shouldShow = true,
+                    type = "DAILY_PROJECTION",
+                    title = "Gợi ý phân tích từ Trợ lý AI 💡",
+                    todayTotalAmount = amount,
+                    projectedMonthlyAmount = amount * 30,
+                    message = "Hôm nay bạn đã chi **180.000đ**. Nếu ngày nào cũng tương tự, tháng này bạn sẽ tiêu khoảng **5.400.000đ** chỉ cho các khoản này.",
+                    tone = "NEUTRAL"
+                )
+            )
+        }
+    }
+
+    fun dismissInsightPopup() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                showInsightPopup = false
+            )
         }
     }
 }
