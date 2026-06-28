@@ -67,6 +67,11 @@ public class User implements UserDetails {
     @Column(name = "score_awareness")
     private int scoreAwareness = 10;
 
+    // 🔒 CHƯƠNG 3 - KHÓA LẠC QUAN: Chống tranh chấp dữ liệu dòng tiền toàn cục
+    @Version
+    @Column(name = "version", nullable = false)
+    private Integer version = 0;
+
     // Constructors
     public User() {
     }
@@ -220,5 +225,13 @@ public class User implements UserDetails {
 
     public void setScoreAwareness(int scoreAwareness) {
         this.scoreAwareness = scoreAwareness;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 }
