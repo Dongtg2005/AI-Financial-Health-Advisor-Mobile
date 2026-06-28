@@ -1,169 +1,227 @@
 package com.example.mobile.ui.profile
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.rounded.Logout
-import androidx.compose.material.icons.rounded.CreditCard
-import androidx.compose.material.icons.rounded.Notifications
-import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.BottomNav
 import com.example.mobile.ui.components.GlassCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController = rememberNavController()) {
-    Box(modifier = Modifier.fillMaxSize()) {
+fun ProfileScreen(
+    navController: NavController = rememberNavController(),
+    modifier: Modifier = Modifier,
+    onLogoutClick: () -> Unit = {
+        navController.navigate("login") {
+            popUpTo("dashboard") { inclusive = true }
+        }
+    }
+) {
+    Box(modifier = modifier.fillMaxSize()) {
         AuroraBackground()
 
         Scaffold(
             containerColor = Color.Transparent,
-            modifier = Modifier.statusBarsPadding(),
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            "Cá nhân",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.W800
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-                )
-            },
             bottomBar = { BottomNav(navController) }
         ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 20.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Profile Avatar Placeholder sử dụng hình tròn bo mượt của Material 3
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Rounded.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(52.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+                // TITLE MÀN HÌNH
                 Text(
-                    "Đông",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.W800
+                    text = "Cá nhân",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.W900,
+                    color = Color(0xFF1A237E),
+                    modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Hộp kính chứa menu (Đã sửa lỗi containerColor)
-                GlassCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        ProfileMenuItem(
-                            icon = Icons.Rounded.Person,
-                            text = "Thông tin tài khoản",
-                            onClick = { /* Navigate to Account Details */ }
+                // KHỐI AVATAR & TÊN (Thiết kế lại gọn gàng)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1A237E).copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Avatar",
+                            tint = Color(0xFF1A237E),
+                            modifier = Modifier.size(32.dp)
                         )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                        
-                        ProfileMenuItem(
-                            icon = Icons.Rounded.CreditCard,
-                            text = "Hạn mức chi tiêu",
-                            onClick = { /* Navigate to Budget Limits */ }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "Trần Ghi Đông",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.W800,
+                            color = Color(0xFF1A237E)
                         )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                        
-                        ProfileMenuItem(
-                            icon = Icons.Rounded.Notifications,
-                            text = "Cài đặt thông báo",
-                            onClick = { /* Navigate to Notifications */ }
-                        )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                        
-                        ProfileMenuItem(
-                            icon = Icons.AutoMirrored.Rounded.Logout,
-                            text = "Đăng xuất",
-                            textColor = MaterialTheme.colorScheme.error,
-                            showChevron = false,
-                            onClick = { /* Handle Logout logic */ }
+                        Text(
+                            text = "Thành viên tài chính thông minh",
+                            fontSize = 13.sp,
+                            color = Color(0xFF1A237E).copy(alpha = 0.6f)
                         )
                     }
                 }
+
+                // ⭐ KHỐI 1 MỚI BỔ SUNG: CARD TÓM TẮT SỐ DƯ TÀI SẢN (Quick Analytics)
+                var isBalanceVisible by remember { mutableStateOf(true) }
+                GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+                    Column {
+                        Text(
+                            text = "Tổng tài sản tích lũy",
+                            fontSize = 13.sp,
+                            color = Color(0xFF1A237E).copy(alpha = 0.6f)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (isBalanceVisible) "28.500.000 VNĐ" else "•••••• VNĐ",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.W900,
+                                color = Color(0xFF1A237E)
+                            )
+                            IconButton(onClick = { isBalanceVisible = !isBalanceVisible }) {
+                                Icon(
+                                    imageVector = if (isBalanceVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = "Ẩn số dư",
+                                    tint = Color(0xFF1A237E)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // KHỐI MENU CHỨC NĂNG: Gom nhóm rành mạch cho ra dáng Product thứ thiệt
+                Text(
+                    text = "Quản lý tài khoản",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.W800,
+                    color = Color(0xFF1A237E).copy(alpha = 0.5f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)) {
+                    Column {
+                        ProfileMenuItem(icon = Icons.Default.AccountCircle, title = "Thông tin tài khoản", badge = "Đã xác thực")
+                        HorizontalDivider(color = Color(0xFF1A237E).copy(alpha = 0.08f), thickness = 1.dp)
+                        ProfileMenuItem(icon = Icons.Default.ShoppingCart, title = "Tài khoản liên kết / Ví", badge = "2 Ví")
+                        HorizontalDivider(color = Color(0xFF1A237E).copy(alpha = 0.08f), thickness = 1.dp)
+                        ProfileMenuItem(icon = Icons.Default.Star, title = "Hạn mức chi tiêu tháng", badge = "Đang chạy")
+                    }
+                }
+
+                Text(
+                    text = "Tiện ích ứng dụng",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.W800,
+                    color = Color(0xFF1A237E).copy(alpha = 0.5f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+                    Column {
+                        ProfileMenuItem(icon = Icons.Default.Notifications, title = "Cài đặt thông báo")
+                        HorizontalDivider(color = Color(0xFF1A237E).copy(alpha = 0.08f), thickness = 1.dp)
+                        ProfileMenuItem(icon = Icons.Default.Share, title = "Xuất báo cáo tài chính (Excel)", badge = "Mới")
+                        HorizontalDivider(color = Color(0xFF1A237E).copy(alpha = 0.08f), thickness = 1.dp)
+                        ProfileMenuItem(icon = Icons.Default.Settings, title = "Cài đặt chu kỳ sao kê")
+                    }
+                }
+
+                // HÀNH ĐỘNG NGUY HIỂM (ĐĂNG XUẤT) ĐƯỢC TÁCH RIÊNG KHỎI NHÓM
+                Button(
+                    onClick = onLogoutClick,
+                    modifier = Modifier.fillMaxWidth().height(54.dp).padding(bottom = 8.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFD32F2F).copy(alpha = 0.1f),
+                        contentColor = Color(0xFFD32F2F)
+                    )
+                ) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Đăng xuất tài khoản", fontWeight = FontWeight.W800, fontSize = 15.sp)
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 }
 
 @Composable
-private fun ProfileMenuItem(
+fun ProfileMenuItem(
     icon: ImageVector,
-    text: String,
-    textColor: Color = Color.Unspecified,
-    showChevron: Boolean = true,
-    onClick: () -> Unit
+    title: String,
+    badge: String? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 14.dp, horizontal = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Icon đại diện phía trước tăng tính nhận diện thị giác
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (textColor == Color.Unspecified) MaterialTheme.colorScheme.onSurfaceVariant else textColor,
-            modifier = Modifier.size(22.dp)
-        )
-        
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.W600,
-            color = textColor,
-            modifier = Modifier.weight(1f)
-        )
-        
-        // Mũi tên điều hướng nhỏ gọn chuẩn iOS/Premium UI
-        if (showChevron) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF1A237E), modifier = Modifier.size(22.dp))
+            Spacer(modifier = Modifier.width(14.dp))
+            Text(text = title, fontSize = 15.sp, fontWeight = FontWeight.W700, color = Color(0xFF212121))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (badge != null) {
+                Text(
+                    text = badge,
+                    fontSize = 11.sp,
+                    color = Color(0xFF1A237E).copy(alpha = 0.6f),
+                    fontWeight = FontWeight.W800,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                tint = Color(0xFF1A237E).copy(alpha = 0.3f),
                 modifier = Modifier.size(20.dp)
             )
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, name = "ProfileScreen")
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ProfileScreenPreview() {
     ProfileScreen()

@@ -18,7 +18,7 @@ import com.example.mobile.ui.components.GlassCard
 
 @Composable
 fun OnboardingScreen(
-    onOnboardingComplete: (income: Double) -> Unit = {}, // Default lambda để Preview tự khởi chạy
+    onOnboardingComplete: (income: Double) -> Unit = {},
     viewModel: OnboardingViewModel? = androidx.lifecycle.viewmodel.compose.viewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -27,7 +27,7 @@ fun OnboardingScreen(
     val isLoading = viewModel?.isLoading?.collectAsState()?.value ?: false
 
     Box(modifier = modifier.fillMaxSize()) {
-        AuroraBackground() // Nền Aurora đồng bộ DNA
+        AuroraBackground()
 
         Column(
             modifier = Modifier
@@ -41,14 +41,14 @@ fun OnboardingScreen(
                 text = "Thiết lập nền móng 🏗️",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.W900,
-                color = Color.White,
+                color = Color(0xFF1A237E),
                 modifier = Modifier.align(Alignment.Start)
             )
-            
+
             Text(
                 text = "Để AI có thể tính toán chính xác sức khỏe tài chính của bạn.",
                 fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.7f),
+                color = Color(0xFF1A237E).copy(alpha = 0.7f),
                 modifier = Modifier.align(Alignment.Start).padding(bottom = 32.dp)
             )
 
@@ -72,7 +72,7 @@ fun OnboardingScreen(
                     )
 
                     Button(
-                        onClick = { 
+                        onClick = {
                             if (viewModel != null) {
                                 viewModel.submitOnboarding(income, budget) {
                                     onOnboardingComplete(income.toDoubleOrNull() ?: 0.0)
@@ -83,6 +83,10 @@ fun OnboardingScreen(
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1A237E),
+                            contentColor = Color.White
+                        ),
                         enabled = income.isNotEmpty() && budget.isNotEmpty() && !isLoading
                     ) {
                         if (isLoading) {
@@ -105,21 +109,32 @@ fun OnboardingInputField(
     placeholder: String
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = label, fontWeight = FontWeight.W700, fontSize = 14.sp, color = Color.White)
+        Text(
+            text = label,
+            fontWeight = FontWeight.W700,
+            fontSize = 14.sp,
+            color = Color(0xFF1A237E)
+        )
         OutlinedTextField(
             value = value,
             onValueChange = { if (it.all { char -> char.isDigit() }) onValueChange(it) },
-            placeholder = { Text(placeholder, color = Color.White.copy(alpha = 0.3f)) },
+            placeholder = { Text(placeholder, color = Color(0xFF616161).copy(alpha = 0.5f)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedBorderColor = Color.White,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
+                focusedTextColor = Color(0xFF212121),
+                unfocusedTextColor = Color(0xFF424242),
+                focusedBorderColor = Color(0xFF1A237E),
+                unfocusedBorderColor = Color(0xFF1A237E).copy(alpha = 0.3f)
             ),
-            suffix = { Text("VNĐ", color = Color.White.copy(alpha = 0.5f), fontWeight = FontWeight.Bold) }
+            suffix = {
+                Text(
+                    text = "VNĐ",
+                    color = Color(0xFF1A237E).copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         )
     }
 }
