@@ -33,7 +33,7 @@ import com.example.mobile.ui.components.BottomNav
 fun DashboardScreen(
     navController: NavController = rememberNavController(),
     onNavigateToTransactions: () -> Unit = {},
-    viewModel: DashboardViewModel? = null,
+    viewModel: DashboardViewModel? = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     val state = if (viewModel != null) {
         viewModel.uiState.collectAsState().value

@@ -6,12 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.mobile.data.local.TokenManager
 import com.example.mobile.data.network.NetworkModule
 import com.example.mobile.data.network.BudgetApiService
+import com.example.mobile.data.network.UserApiService
+import com.example.mobile.data.network.OnboardingRequest
 import com.example.mobile.data.network.dto.BudgetSuggestionResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 
 data class OnboardingUiState(
     val isSubmitting: Boolean = false,
@@ -23,7 +26,11 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     private val _uiState = MutableStateFlow(OnboardingUiState())
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
     private val budgetApiService = NetworkModule.createService(application, BudgetApiService::class.java)
+    private val userApiService = NetworkModule.createService(application, UserApiService::class.java)
     private val tokenManager = TokenManager(application)
 
     fun fetchBudgetSuggestion(income: Double) {
@@ -44,6 +51,29 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSubmitting = false) }
                 e.printStackTrace()
+            }
+        }
+    }
+
+    fun submitOnboarding(income: String, budget: String, onSuccess: () -> Unit) {
+        val incomeVal = income.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        val budgetVal = budget.toBigDecimalOrNull() ?: BigDecimal.ZERO
+
+        if (incomeVal <= BigDecimal.ZERO || budgetVal <= BigDecimal.ZERO) return
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val response = userApiService.submitOnboarding(OnboardingRequest(incomeVal, budgetVal))
+                if (response.isSuccessful) {
+                    // Lưu cục bộ để Dashboard dùng ngay không cần chờ load lại
+                    tokenManager.saveSuggestedBudget(budgetVal.toDouble(), "Ngân sách tự chọn")
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
