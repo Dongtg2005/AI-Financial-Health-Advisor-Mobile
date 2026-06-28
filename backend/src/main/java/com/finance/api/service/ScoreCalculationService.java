@@ -10,6 +10,7 @@ import com.finance.api.repository.DebtRepository;
 import com.finance.api.repository.TransactionRepository;
 import com.finance.api.repository.BudgetRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,20 +21,24 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional(readOnly = true)
 public class ScoreCalculationService {
 
     private final DebtRepository debtRepository;
     private final TransactionRepository transactionRepository;
     private final BudgetRepository budgetRepository;
+    private final com.finance.api.repository.UserRepository userRepository;
 
     private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     public ScoreCalculationService(DebtRepository debtRepository, 
                                    TransactionRepository transactionRepository, 
-                                   BudgetRepository budgetRepository) {
+                                   BudgetRepository budgetRepository,
+                                   com.finance.api.repository.UserRepository userRepository) {
         this.debtRepository = debtRepository;
         this.transactionRepository = transactionRepository;
         this.budgetRepository = budgetRepository;
+        this.userRepository = userRepository;
     }
 
     public FinancialScoreDTO calculateHealthScore(User user) {
@@ -178,5 +183,11 @@ public class ScoreCalculationService {
                 .currentStage(currentStage)
                 .penaltyReason(penaltyReason)
                 .build();
+    }
+
+    public FinancialScoreDTO calculateFinancialScore(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy User với ID: " + userId));
+        return calculateHealthScore(user);
     }
 }

@@ -12,6 +12,7 @@ import com.finance.api.repository.DebtRepository;
 import com.finance.api.repository.UserRepository;
 import com.finance.api.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class DebtService {
 
     private final DebtRepository debtRepository;
@@ -132,5 +134,15 @@ public class DebtService {
     private String formatCurrency(BigDecimal amount) {
         DecimalFormat formatter = new DecimalFormat("#,###");
         return formatter.format(amount);
+    }
+
+    public List<Debt> getActiveDebtsByUserId(UUID userId) {
+        return debtRepository.findByUserIdAndIsActive(userId, true);
+    }
+
+    // 🔄 GHI ĐÈ GIAO TÁC: Hàm cập nhật/trả nợ bắt buộc phải ghi đè để kiểm soát @Version
+    @Transactional
+    public Debt saveDebt(Debt debt) {
+        return debtRepository.save(debt);
     }
 }
