@@ -31,7 +31,7 @@ val AmberWarning  = Color(0xFF854F0B)
 val AmberWarning10 = Color(0xFFFAEEDA)
 
 // Score ring colors
-val ScoreGood    = Color(0xFF378ADD)  // Xanh — tốt
+val ScoreGood    = Color(0xFF2E7D32)  // Xanh lá cây — tốt
 val ScoreWarning = Color(0xFFEF9F27)  // Vàng — cần chú ý
 val ScoreDanger  = Color(0xFFE24B4A)  // Đỏ — nguy hiểm
 

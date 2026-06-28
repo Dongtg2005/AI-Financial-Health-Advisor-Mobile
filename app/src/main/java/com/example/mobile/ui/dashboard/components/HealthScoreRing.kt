@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mobile.ui.theme.*
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun HealthScoreRing(
@@ -63,19 +64,27 @@ fun HealthScoreRing(
             .size(ringSize)
             .padding(16.dp)
             .drawBehind {
-                drawIntoCanvas { canvas ->
-                    val paint = Paint().asFrameworkPaint()
-                    paint.color = ringColor.copy(alpha = 0.18f).toArgb()
-                    paint.maskFilter = android.graphics.BlurMaskFilter(
-                        20.dp.toPx(), 
-                        android.graphics.BlurMaskFilter.Blur.NORMAL
-                    )
-                    canvas.nativeCanvas.drawCircle(
-                        center.x,
-                        center.y,
-                        (ringSize.toPx() / 2) - strokeWidth.toPx() * 1.5f,
-                        paint
-                    )
+                // 🛡️ SỬA LỖI ĐỘC LẬP DENSITY: Gọi toPx() an toàn tuyệt đối bên trong DrawScope
+                val blurRadius = 20.dp.toPx()
+                val radius = (ringSize.toPx() / 2) - strokeWidth.toPx() * 1.5f
+                
+                if (radius > 0) {
+                    drawIntoCanvas { canvas ->
+                        val paint = Paint().asFrameworkPaint()
+                        paint.color = ringColor.copy(alpha = 0.18f).toArgb()
+                        
+                        // Khởi tạo bộ lọc mờ an toàn không sợ crash môi trường preview
+                        paint.maskFilter = android.graphics.BlurMaskFilter(
+                            blurRadius, 
+                            android.graphics.BlurMaskFilter.Blur.NORMAL
+                        )
+                        canvas.nativeCanvas.drawCircle(
+                            center.x,
+                            center.y,
+                            radius,
+                            paint
+                        )
+                    }
                 }
             }
     ) {
@@ -89,6 +98,7 @@ fun HealthScoreRing(
             )
             val arcSize = androidx.compose.ui.geometry.Size(diameter, diameter)
 
+            // Vẽ thanh ray nền (Track) góc 120 độ quét 300 độ để hở góc đáy thanh thoát
             drawArc(
                 color       = trackColor,
                 startAngle  = 120f,
@@ -99,6 +109,7 @@ fun HealthScoreRing(
                 style       = Stroke(width = strokePx, cap = StrokeCap.Round)
             )
 
+            // Vẽ vòng tiến độ live động theo điểm số của Đông
             drawArc(
                 brush       = ringBrush,
                 startAngle  = 120f,
@@ -110,6 +121,7 @@ fun HealthScoreRing(
             )
         }
 
+        // Khối hiển thị điểm số trung tâm
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -135,6 +147,16 @@ fun HealthScoreRing(
                 color = ringColor,
                 fontWeight = FontWeight.W800
             )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HealthScoreRingPreview() {
+    MaterialTheme {
+        Box(modifier = Modifier.padding(20.dp)) {
+            HealthScoreRing(score = 75)
         }
     }
 }
