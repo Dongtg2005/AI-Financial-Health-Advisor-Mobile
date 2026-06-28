@@ -3,50 +3,84 @@ package com.example.mobile.data.local
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import androidx.security.crypto.MasterKeys
 
 class TokenManager(context: Context) {
 
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+    // 🔒 KHỞI TẠO BỘ KHÓA PHẦN CỨNG: Tạo Master Key dùng thuật toán AES256-GCM
+    private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
 
+    // 🛡️ ENCRYPTED SHAREDPREFERENCES: Tự động mã hóa hai chiều toàn bộ dữ liệu ghi xuống bộ nhớ
     private val sharedPreferences: SharedPreferences = EncryptedSharedPreferences.create(
+        "secure_finance_prefs", // Tên file XML lưu trữ đã mã hóa
+        masterKeyAlias,
         context,
-        "secure_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,   // Mã hóa Key
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM // Mã hóa Value
     )
 
     companion object {
-        private const val TOKEN_KEY = "jwt_token"
+        private const val KEY_JWT_TOKEN = "jwt_token"
+        private const val KEY_SUGGESTED_BUDGET = "suggested_budget"
+        private const val KEY_BUDGET_MESSAGE = "budget_message"
     }
 
+    /**
+     * Lưu trữ Token JWT an toàn sau khi Đăng nhập/Đăng ký thành công
+     */
+    fun saveJwtToken(token: String) {
+        sharedPreferences.edit().putString(KEY_JWT_TOKEN, token).apply()
+    }
+
+    /**
+     * Lấy Token JWT để gắn vào Header của các API gửi lên Backend
+     */
+    fun getJwtToken(): String? {
+        return sharedPreferences.getString(KEY_JWT_TOKEN, null)
+    }
+
+    // Tương thích ngược với các thành phần cũ gọi saveToken/getToken/clearToken
     fun saveToken(token: String) {
-        sharedPreferences.edit().putString(TOKEN_KEY, token).apply()
+        saveJwtToken(token)
     }
 
     fun getToken(): String? {
-        return sharedPreferences.getString(TOKEN_KEY, null)
+        return getJwtToken()
     }
 
     fun clearToken() {
-        sharedPreferences.edit().remove(TOKEN_KEY).apply()
+        clearAuthData()
     }
 
-    fun saveSuggestedBudget(amount: Double, message: String) {
-        sharedPreferences.edit()
-            .putFloat("suggested_budget", amount.toFloat())
-            .putString("suggested_message", message)
-            .apply()
+    /**
+     * Đồng bộ Signature 2 tham số thực tế của Đông tại OnboardingViewModel
+     */
+    fun saveSuggestedBudget(budget: Double, message: String) {
+        sharedPreferences.edit().apply {
+            putFloat(KEY_SUGGESTED_BUDGET, budget.toFloat())
+            putString(KEY_BUDGET_MESSAGE, message)
+            apply()
+        }
     }
 
+    /**
+     * Lấy ngân sách đã lưu phục vụ hiển thị live tại Dashboard
+     */
     fun getSuggestedBudget(): Double {
-        return sharedPreferences.getFloat("suggested_budget", 0f).toDouble()
+        return sharedPreferences.getFloat(KEY_SUGGESTED_BUDGET, 0.0f).toDouble()
     }
 
+    /**
+     * Lấy tin nhắn gợi ý ngân sách phục vụ hiển thị live tại Dashboard
+     */
     fun getSuggestedMessage(): String? {
-        return sharedPreferences.getString("suggested_message", null)
+        return sharedPreferences.getString(KEY_BUDGET_MESSAGE, null)
+    }
+
+    /**
+     * Đăng xuất - Xóa sạch toàn bộ cache mã hóa
+     */
+    fun clearAuthData() {
+        sharedPreferences.edit().clear().apply()
     }
 }
