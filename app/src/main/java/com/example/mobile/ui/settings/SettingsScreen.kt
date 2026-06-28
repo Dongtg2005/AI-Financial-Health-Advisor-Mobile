@@ -14,13 +14,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.BottomNav
 import com.example.mobile.ui.components.GlassCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(navController: NavController = rememberNavController()) {
     Box(modifier = Modifier.fillMaxSize()) {
         AuroraBackground()
 
@@ -161,4 +163,10 @@ private fun SettingsItem(
             )
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true, name = "SettingsScreen")
+@Composable
+fun SettingsScreenPreview() {
+    SettingsScreen()
 }

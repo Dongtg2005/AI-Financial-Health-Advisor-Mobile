@@ -13,11 +13,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.GlassCard
 
-@Preview(showBackground = true, showSystemUi = true, name = "RegisterScreen")
 @Composable
 fun RegisterScreen(
     navController: NavController? = null, // Nullable để Preview không cần NavController thật
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel? = null
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         AuroraBackground()
@@ -94,4 +93,13 @@ fun RegisterScreen(
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true, name = "RegisterScreen")
+@Composable
+fun RegisterScreenPreview() {
+    RegisterScreen(
+        navController = null,
+        viewModel = null
+    )
 }

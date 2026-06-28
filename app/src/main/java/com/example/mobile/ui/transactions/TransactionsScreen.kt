@@ -34,7 +34,6 @@ data class TransactionItemData(
     val category: String
 )
 
-@Preview(showBackground = true, showSystemUi = true, name = "TransactionsScreen")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(navController: NavController? = null) {
@@ -165,4 +164,10 @@ fun TransactionsScreen(navController: NavController? = null) {
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true, name = "TransactionsScreen")
+@Composable
+fun TransactionsScreenPreview() {
+    TransactionsScreen(navController = null)
 }

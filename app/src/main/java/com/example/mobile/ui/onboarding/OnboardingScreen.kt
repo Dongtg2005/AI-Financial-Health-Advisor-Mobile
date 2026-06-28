@@ -24,12 +24,11 @@ import com.example.mobile.ui.components.GlassCard
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 
-@Preview(showBackground = true, showSystemUi = true, name = "OnboardingScreen")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
     onOnboardingComplete: (income: Double) -> Unit = {}, // Default lambda để Preview tự khởi chạy
-    viewModel: OnboardingViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: OnboardingViewModel? = null,
     modifier: Modifier = Modifier
 ) {
     // 3 steps setup: Step 1 (Income), Step 2 (Debts), Step 3 (Notification description)
@@ -124,7 +123,7 @@ fun OnboardingScreen(
                             // Gọi ngầm API gợi ý ngân sách ngay sau khi nhập thu nhập ở bước 0
                             if (pagerState.currentPage == 0 && incomeInput.isNotEmpty()) {
                                 val incomeValue = incomeInput.toDoubleOrNull() ?: 0.0
-                                viewModel.fetchBudgetSuggestion(incomeValue)
+                                viewModel?.fetchBudgetSuggestion(incomeValue)
                             }
                             
                             coroutineScope.launch {
@@ -324,4 +323,13 @@ fun StepNotificationLayout() {
             modifier = Modifier.padding(horizontal = 8.dp)
         )
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true, name = "OnboardingScreen")
+@Composable
+fun OnboardingScreenPreview() {
+    OnboardingScreen(
+        onOnboardingComplete = {},
+        viewModel = null
+    )
 }
