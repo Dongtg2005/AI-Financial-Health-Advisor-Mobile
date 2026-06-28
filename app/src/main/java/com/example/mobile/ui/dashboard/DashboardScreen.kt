@@ -2,6 +2,7 @@ package com.example.mobile.ui.dashboard
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -38,7 +39,7 @@ fun DashboardScreen(
     val state = if (viewModel != null) {
         viewModel.uiState.collectAsState().value
     } else {
-        DashboardUiState(userName = "Đông (Preview)")
+        DashboardUiState(userName = "Trần Ghi Đông") // Thay đổi text cứng preview sang tên Đông chuẩn
     }
     var showSheet by remember { mutableStateOf(false) }
     var showCashEstimateSheet by remember { mutableStateOf(false) }
@@ -76,35 +77,36 @@ fun DashboardScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. NỀN HÀO QUANG: Tràn viền hoàn toàn (Edge-to-edge)
         AuroraBackground()
 
         Scaffold(
             containerColor = Color.Transparent,
-            modifier = Modifier.statusBarsPadding(), // Đẩy nội dung xuống dưới Status Bar
             topBar = {
                 TopAppBar(
+                    modifier = Modifier.statusBarsPadding(),
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             AppLogo(modifier = Modifier.size(36.dp))
-                            Spacer(Modifier.width(16.dp))
+                            Spacer(Modifier.width(12.dp))
                             Column {
                                 Text(
                                     "Xin chào,",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    color = Color(0xFF1A237E).copy(alpha = 0.6f), // Đổi màu Indigo tương phản cao
+                                    fontWeight = FontWeight.W700
                                 )
                                 Text(
                                     state.userName,
                                     style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.W800,
+                                    fontWeight = FontWeight.W900,
+                                    color = Color(0xFF1A237E) // Đổi màu Indigo sẫm
                                 )
                             }
                         }
                     },
                     actions = {
                         IconButton(onClick = {}) {
-                            Icon(Icons.Rounded.Notifications, contentDescription = "Thông báo")
+                            Icon(Icons.Rounded.Notifications, contentDescription = "Thông báo", tint = Color(0xFF1A237E))
                         }
                         Spacer(Modifier.width(4.dp))
                     },
@@ -113,15 +115,14 @@ fun DashboardScreen(
                     )
                 )
             },
-            bottomBar = { BottomNav(navController) }, // Thêm thanh điều hướng dưới cùng
+            bottomBar = { BottomNav(navController) },
             floatingActionButton = {
-                // 3. BÓNG PHÁT SÁNG: FAB với quầng sáng xanh dương
                 Box(
                     modifier = Modifier.drawBehind {
                         drawIntoCanvas { canvas ->
                             val paint = Paint().asFrameworkPaint()
-                            paint.color = Blue40.copy(alpha = 0.4f).toArgb()
-                            paint.setShadowLayer(30.dp.toPx(), 0f, 10.dp.toPx(), Blue40.copy(alpha = 0.5f).toArgb())
+                            paint.color = Color(0xFF1A237E).copy(alpha = 0.3f).toArgb()
+                            paint.setShadowLayer(24.dp.toPx(), 0f, 8.dp.toPx(), Color(0xFF1A237E).copy(alpha = 0.4f).toArgb())
                             canvas.nativeCanvas.drawRoundRect(
                                 0f, 0f, size.width, size.height,
                                 16.dp.toPx(), 16.dp.toPx(), paint
@@ -132,10 +133,10 @@ fun DashboardScreen(
                     ExtendedFloatingActionButton(
                         onClick = { showSheet = true },
                         icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                        text = { Text("Thêm giao dịch") },
-                        containerColor = Blue40,
+                        text = { Text("Thêm giao dịch", fontWeight = FontWeight.W800) },
+                        containerColor = Color(0xFF1A237E), // Đồng bộ FAB sang Indigo
                         contentColor = Color.White,
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)
                     )
                 }
@@ -147,40 +148,36 @@ fun DashboardScreen(
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(bottom = 120.dp, start = 16.dp, end = 16.dp, top = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
-                // 4. CHỒNG LẤP: Đưa Score Ring chèn lên Header mờ ảo
                 item {
-                    GlassCard(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 20.dp, horizontal = 16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
                         ) {
-                            HealthScoreCircle(
+                            // 🔄 ĐẤU NỐI COMPONENT MỚI: Sử dụng HealthScoreRing xịn thay thế cho Circle lỗi màu cũ
+                            HealthScoreRing(
                                 score = state.healthScore,
-                                breakdown = state.scoreBreakdown,
-                                sizeDp = 220,
-                                strokeWidthDp = 18f
+                                ringSize = 200.dp,
+                                strokeWidth = 14.dp
                             )
 
                             Text(
-                                "Tài chính đang ổn định, tiếp tục phát huy nhé!",
+                                text = "Tài chính đang ổn định, tiếp tục phát huy nhé!",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = Color(0xFF1A237E).copy(alpha = 0.8f),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                fontWeight = FontWeight.W600,
-                                modifier = Modifier.padding(horizontal = 32.dp) // Tăng padding để ngắt dòng đẹp hơn
+                                fontWeight = FontWeight.W700,
+                                modifier = Modifier.padding(horizontal = 24.dp)
                             )
 
-                            // Bảng chỉ số được gom nhóm lại cho ngay ngắn
                             Column(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 val breakdown = state.scoreBreakdown
@@ -216,7 +213,6 @@ fun DashboardScreen(
                     )
                 }
 
-                // BIỂU ĐỒ CỘT ĐÔI: So sánh động Chi tiêu vs Hạn mức từ dữ liệu live Backend
                 item {
                     CategoryCompareChart(
                         categories = state.budgetCategories,
@@ -243,18 +239,17 @@ fun DashboardScreen(
                         Text(
                             "Giao dịch gần đây",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.W800
+                            fontWeight = FontWeight.W800,
+                            color = Color(0xFF1A237E)
                         )
                         TextButton(onClick = onNavigateToTransactions) {
-                            Text("Xem tất cả", color = Blue40, fontWeight = FontWeight.W700)
+                            Text("Xem tất cả", color = Color(0xFF1A237E), fontWeight = FontWeight.W800)
                         }
                     }
                 }
 
                 item {
-                    GlassCard(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column {
                             state.recentTransactions.forEachIndexed { index, tx ->
                                 val config = iconForCategory(tx.category, tx.isIncome)
@@ -269,7 +264,7 @@ fun DashboardScreen(
                                 )
                                 if (index < state.recentTransactions.lastIndex) {
                                     HorizontalDivider(
-                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                        color = Color(0xFF1A237E).copy(alpha = 0.1f),
                                         thickness = 0.5.dp,
                                         modifier = Modifier.padding(vertical = 4.dp)
                                     )
@@ -296,32 +291,33 @@ private fun ScoreFactor(
     max: Int,
     modifier: Modifier = Modifier
 ) {
+    // Tinh chỉnh Surface thành dạng kính mờ thực thụ, tăng độ tương phản của chữ
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.small,
-        color = Color.White.copy(alpha = 0.5f),
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.4f))
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White.copy(alpha = 0.25f), // Giảm alpha xuống để tăng độ xuyên thấu kính mờ
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1A237E).copy(alpha = 0.15f))
     ) {
-        Column(modifier = Modifier.padding(10.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                fontWeight = FontWeight.W600,
+                color = Color(0xFF1A237E).copy(alpha = 0.6f), // Đổi sang màu sẫm dễ đọc
+                fontWeight = FontWeight.W700,
                 maxLines = 1
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     value.toString(),
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.W800,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.W900,
+                    color = Color(0xFF1A237E) // Điểm số hiện rõ mồn một
                 )
                 Text(
                     " / $max",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    color = Color(0xFF1A237E).copy(alpha = 0.4f),
                     modifier = Modifier.padding(bottom = 2.dp, start = 2.dp),
                     fontWeight = FontWeight.W700
                 )
