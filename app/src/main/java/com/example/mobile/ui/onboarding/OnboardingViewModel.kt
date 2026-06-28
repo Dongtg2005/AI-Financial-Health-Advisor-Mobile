@@ -68,6 +68,12 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                 if (response.isSuccessful) {
                     // Lưu cục bộ để Dashboard dùng ngay không cần chờ load lại
                     tokenManager.saveSuggestedBudget(budgetVal.toDouble(), "Ngân sách tự chọn")
+                    
+                    // PHÁT SÓNG TOÀN CỤC: Báo cho Dashboard biết để cập nhật cấu hình mới
+                    viewModelScope.launch {
+                        com.example.mobile.common.AppEventBus.emit(com.example.mobile.common.AppEvent.OnboardingCompleted)
+                    }
+
                     onSuccess()
                 }
             } catch (e: Exception) {

@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import com.example.mobile.common.AppEvent
+import com.example.mobile.common.AppEventBus
+import kotlinx.coroutines.flow.collectLatest
 
 data class ScoreBreakdown(
     val spending: Int = 35,
@@ -68,6 +71,20 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         loadDashboardInitialData()
+        listenToGlobalEvents()
+    }
+
+    private fun listenToGlobalEvents() {
+        viewModelScope.launch {
+            AppEventBus.events.collectLatest { event ->
+                when (event) {
+                    is AppEvent.OnboardingCompleted, 
+                    is AppEvent.TransactionCreated -> {
+                        fetchDashboardData()
+                    }
+                }
+            }
+        }
     }
 
     private fun loadDashboardInitialData() {
@@ -165,6 +182,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 )
 
                 val response = transactionApiService.createTransaction(request)
+
+                // PHÁT SÓNG TOÀN CỤC: Giao dịch mới đã tạo thành công
+                com.example.mobile.common.AppEventBus.emit(com.example.mobile.common.AppEvent.TransactionCreated)
 
                 // Kiểm tra xem Backend có kích hoạt trả về MicroInsight (lần nhập thứ 3) hay không
                 val insightFromServer = response.microInsight
