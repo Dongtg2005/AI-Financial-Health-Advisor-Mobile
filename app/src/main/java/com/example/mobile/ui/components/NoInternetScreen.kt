@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,71 +19,73 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun NoInternetScreen(
     modifier: Modifier = Modifier,
-    onRetryClick: () -> Unit = {} // Lambda xử lý khi người dùng bấm nút Thử lại
+    onRetryClick: () -> Unit = {}
 ) {
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        // 1. NỀN HÀO QUANG ĐỒNG BỘ: Giữ vững DNA thị giác cao cấp
         AuroraBackground()
 
-        // Lớp phủ tối nhẹ để tăng độ tương phản cho Text trắng
+        // Tăng độ che phủ tối (alpha = 0.2f) để tạo chiều sâu và làm nổi khối GlassCard
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = Color.Black.copy(alpha = 0.15f)
+            color = Color.Black.copy(alpha = 0.2f)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp)
+                    .padding(24.dp)
                     .systemBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // 2. KHỐI KÍNH MỜ (Glassmorphism): Cảnh báo trực quan
                 GlassCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                        modifier = Modifier.padding(28.dp),
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 36.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Icon Tín hiệu mất kết nối
-                        Text(
-                            text = "🌐📡",
-                            fontSize = 50.sp,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                        // 1. THAY EMOJI BẰNG VECTOR ICON: Sang trọng và đồng bộ Material 3
+                        Icon(
+                            imageVector = Icons.Rounded.Warning,
+                            contentDescription = "No Internet Icon",
+                            tint = Color(0xFF1A237E),
+                            modifier = Modifier.size(56.dp)
                         )
 
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // 2. ĐỔI SANG TONE MÀU SẪM: Giải quyết triệt để lỗi "cháy sáng" của text
                         Text(
-                            text = "Mất kết nối Internet",
+                            text = "Kết nối bị gián đoạn",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.W900,
-                            color = Color.White,
+                            color = Color(0xFF1A237E),
                             textAlign = TextAlign.Center
                         )
 
                         Text(
-                            text = "Vui lòng kiểm tra lại Wi-Fi hoặc dữ liệu di động (3G/4G/5G) để tiếp tục cập nhật dòng chảy tài chính.",
+                            text = "Hệ thống không thể kết nối tới máy chủ. Vui lòng kiểm tra tín hiệu Wi-Fi hoặc dữ liệu di động (3G/4G/5G) của thiết bị.",
                             fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.7f),
+                            color = Color(0xFF1A237E).copy(alpha = 0.7f),
                             textAlign = TextAlign.Center,
-                            lineHeight = 20.sp
+                            lineHeight = 22.sp
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        // 3. NÚT THỬ LẠC (RETRY BUTTON)
+                        // 3. NHUỘM MÀU NÚT BẤM (BUTTON): Tạo điểm nhấn hành động tương phản mạnh
                         Button(
                             onClick = onRetryClick,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp),
+                                .height(52.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
-                                contentColor = Color.Black
+                                containerColor = Color(0xFF1A237E), // Nền nút xanh Indigo sẫm nổi bật
+                                contentColor = Color.White
                             )
                         ) {
                             Icon(
