@@ -8,13 +8,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.GlassCard
 
+@Preview(showBackground = true, showSystemUi = true, name = "RegisterScreen")
 @Composable
 fun RegisterScreen(
-    navController: NavController,
+    navController: NavController? = null, // Nullable để Preview không cần NavController thật
     viewModel: AuthViewModel = viewModel()
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -71,7 +73,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Button(
-                    onClick = { navController.popBackStack() },
+                    onClick = { navController?.popBackStack() },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = MaterialTheme.shapes.small
                 ) {
@@ -82,7 +84,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             TextButton(
-                onClick = { navController.popBackStack() }
+                onClick = { navController?.popBackStack() }
             ) {
                 Text(
                     "Đã có tài khoản? Đăng nhập", 

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile.ui.dashboard.components.*
 import com.example.mobile.ui.theme.*
 import com.example.mobile.ui.components.GlassCard
@@ -27,6 +28,7 @@ import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.AppLogo
 import com.example.mobile.ui.components.BottomNav
 
+@Preview(showBackground = true, showSystemUi = true, name = "DashboardScreen")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(

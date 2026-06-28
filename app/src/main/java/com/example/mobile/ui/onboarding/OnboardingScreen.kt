@@ -21,12 +21,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.GlassCard
+import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 
+@Preview(showBackground = true, showSystemUi = true, name = "OnboardingScreen")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
-    onOnboardingComplete: (income: Double) -> Unit,
+    onOnboardingComplete: (income: Double) -> Unit = {}, // Default lambda để Preview tự khởi chạy
     viewModel: OnboardingViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     modifier: Modifier = Modifier
 ) {

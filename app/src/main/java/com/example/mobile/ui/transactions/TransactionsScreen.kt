@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.GlassCard
 import com.example.mobile.ui.dashboard.components.TransactionItem
@@ -33,9 +34,10 @@ data class TransactionItemData(
     val category: String
 )
 
+@Preview(showBackground = true, showSystemUi = true, name = "TransactionsScreen")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionsScreen(navController: NavController) {
+fun TransactionsScreen(navController: NavController? = null) {
     // Dữ liệu mock cấu trúc động (Sau này sẽ lấy từ TransactionsViewModel)
     val groupedData = remember {
         listOf(
@@ -73,7 +75,7 @@ fun TransactionsScreen(navController: NavController) {
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(onClick = { navController?.popBackStack() }) {
                             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     },
