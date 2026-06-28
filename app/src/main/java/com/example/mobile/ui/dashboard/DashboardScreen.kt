@@ -28,20 +28,23 @@ import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.AppLogo
 import com.example.mobile.ui.components.BottomNav
 
-@Preview(showBackground = true, showSystemUi = true, name = "DashboardScreen")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     navController: NavController = rememberNavController(),
     onNavigateToTransactions: () -> Unit = {},
-    viewModel: DashboardViewModel = viewModel(),
+    viewModel: DashboardViewModel? = null,
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state = if (viewModel != null) {
+        viewModel.uiState.collectAsState().value
+    } else {
+        DashboardUiState(userName = "Đông (Preview)")
+    }
     var showSheet by remember { mutableStateOf(false) }
     var showCashEstimateSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.fetchDashboardData()
+        viewModel?.fetchDashboardData()
     }
 
     if (showSheet) {
@@ -49,7 +52,7 @@ fun DashboardScreen(
             onDismiss = { showSheet = false },
             onConfirm = { amount, note, category ->
                 showSheet = false
-                viewModel.saveTransaction(
+                viewModel?.saveTransaction(
                     amount = amount.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO,
                     note = note,
                     category = category,
@@ -63,7 +66,7 @@ fun DashboardScreen(
         WeeklyCashEstimateSheet(
             onDismiss = { showCashEstimateSheet = false },
             onConfirm = { totalAmount, category ->
-                viewModel.submitWeeklyCashEstimate(
+                viewModel?.submitWeeklyCashEstimate(
                     totalAmount = totalAmount,
                     category = category,
                     onSuccess = { showCashEstimateSheet = false }
@@ -280,7 +283,7 @@ fun DashboardScreen(
         if (state.showInsightPopup && state.currentInsightData != null) {
             com.example.mobile.ui.components.MicroInsightDialog(
                 insight = state.currentInsightData!!,
-                onDismiss = { viewModel.dismissInsightPopup() }
+                onDismiss = { viewModel?.dismissInsightPopup() }
             )
         }
     }
@@ -343,4 +346,14 @@ private fun iconForCategory(
     category == "shopping" -> IconConfig(Icons.Rounded.ShoppingCart, SurfaceAmber, AmberWarning)
     category == "debt" -> IconConfig(Icons.Rounded.CreditCard, SurfaceRed, RedDanger)
     else -> IconConfig(Icons.Rounded.Receipt, SurfaceBlue, Blue40)
+}
+
+@Preview(showBackground = true, showSystemUi = true, name = "DashboardScreen")
+@Composable
+fun DashboardScreenPreview() {
+    DashboardScreen(
+        navController = rememberNavController(),
+        onNavigateToTransactions = {},
+        viewModel = null
+    )
 }
