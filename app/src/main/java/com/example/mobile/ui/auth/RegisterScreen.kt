@@ -48,14 +48,14 @@ fun RegisterScreen(
 
             // Đổi text tiêu đề sang màu xanh đen đậm sâu để nổi bật trên nền sáng
             Text(
-                text  = "Tạo tài khoản mới 🚀",
+                text  = "Tạo tài khoản mới",
                 fontSize = 28.sp,
                 color = Color(0xFF1A237E),
                 fontWeight = FontWeight.W900
             )
 
             Text(
-                text  = "Bắt đầu hành trình làm chủ sinh mệnh tài chính",
+                text  = "Bắt đầu hành trình làm chủ tài chính của bạn",
                 fontSize = 14.sp,
                 color = Color(0xFF1A237E).copy(alpha = 0.7f),
                 modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)

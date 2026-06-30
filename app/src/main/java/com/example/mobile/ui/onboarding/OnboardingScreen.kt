@@ -38,7 +38,7 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Thiết lập nền móng 🏗️",
+                text = "Thiết lập nền móng",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.W900,
                 color = Color(0xFF1A237E),
