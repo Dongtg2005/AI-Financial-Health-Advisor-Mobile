@@ -22,17 +22,17 @@ import com.example.mobile.common.AppEventBus
 import kotlinx.coroutines.flow.collectLatest
 
 data class ScoreBreakdown(
-    val spending: Int = 35,
-    val debt: Int = 35,
-    val saving: Int = 20,
-    val awareness: Int = 10
+    val spending: Int = 0,
+    val debt: Int = 0,
+    val saving: Int = 0,
+    val awareness: Int = 0
 )
 
 data class DashboardUiState(
-    val userName: String = "Đông",
+    val userName: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val healthScore: Int = 100,
+    val healthScore: Int = 0,
     val totalSpent: Long = 0,
     val totalBudget: Long = 0,
     val scoreBreakdown: ScoreBreakdown = ScoreBreakdown(),
@@ -120,6 +120,13 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 // Gọi API tổng hợp mới từ Server
                 val response = apiService.getDashboardSummary()
                 
+                // Gọi thêm API lấy danh sách giao dịch gần đây thực tế
+                val txResponse = try {
+                    transactionApiService.getTransactions()
+                } catch (e: Exception) {
+                    null
+                }
+                
                 if (response.status == 200 && response.data != null) {
                     val serverData = response.data
                     val firstAlert = serverData.alerts.firstOrNull()
@@ -151,7 +158,19 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                             // Map danh mục chi tiêu thật từ DB lên UI
                             budgetCategories = serverData.budgetCategories.map { dto ->
                                 BudgetCategoryUi(name = dto.name, spent = dto.spent, limit = dto.limit)
-                            }
+                            },
+                            recentTransactions = (txResponse?.data ?: emptyList())
+                                .take(4)
+                                .map { dto ->
+                                    TransactionUi(
+                                        id = dto.id,
+                                        name = dto.category.replaceFirstChar { it.uppercase() } + " - " + (if (dto.type == "INCOME") "Thu nhập" else "Chi tiêu"),
+                                        date = dto.transactionAt.substringBefore("T"),
+                                        amount = dto.amount.toLong(),
+                                        isIncome = dto.type == "INCOME",
+                                        category = dto.category.lowercase()
+                                    )
+                                }
                         )
                     }
                 } else {
