@@ -2,13 +2,14 @@ package com.finance.api.controller;
 
 import com.finance.api.dto.response.DashboardResponse;
 import com.finance.api.dto.response.DebtSummaryResponse;
+import com.finance.api.dto.response.FinancialScoreDTO;
 import com.finance.api.entity.Transaction;
 import com.finance.api.entity.TransactionType;
 import com.finance.api.entity.User;
 import com.finance.api.repository.UserRepository;
 import com.finance.api.repository.TransactionRepository;
 import com.finance.api.service.DebtService;
-import com.finance.api.service.HealthScoreService;
+import com.finance.api.service.ScoreCalculationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,14 +32,16 @@ public class DashboardController {
     private final UserRepository userRepository;
     private final DebtService debtService;
     private final TransactionRepository transactionRepository;
-    private final HealthScoreService healthScoreService;
+    private final ScoreCalculationService scoreCalculationService;
 
-    public DashboardController(UserRepository userRepository, DebtService debtService, 
-                               TransactionRepository transactionRepository, HealthScoreService healthScoreService) {
+    public DashboardController(UserRepository userRepository, 
+                               DebtService debtService, 
+                               TransactionRepository transactionRepository, 
+                               ScoreCalculationService scoreCalculationService) {
         this.userRepository = userRepository;
         this.debtService = debtService;
         this.transactionRepository = transactionRepository;
-        this.healthScoreService = healthScoreService;
+        this.scoreCalculationService = scoreCalculationService;
     }
 
     @GetMapping("/summary")
@@ -48,13 +51,15 @@ public class DashboardController {
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
         UUID userId = user.getId();
 
-        // 1. Tự động tính toán cập nhật điểm sức khoẻ trước khi trả về
-        user = healthScoreService.updateAndGetHealthScore(userId);
+        // 1. Tự động tính toán điểm sức khoẻ bằng Service core tối ưu hóa mới (Snapshot)
+        FinancialScoreDTO scoreDto = scoreCalculationService.calculateFinancialScore(userId);
+
+        // 🛡️ CHƯƠNG 3 TỐI ƯU: ĐÃ BỎ LỆNH userRepository.save(user) ĐỂ TRIỆT TIÊU LỖI 409 CONFLICT VÔ LÝ!
 
         // 2. Tính toán ngân sách
         BigDecimal suggestedBudget = user.getSuggestedBudget() != null ? user.getSuggestedBudget() : BigDecimal.valueOf(10000000);
 
-        // 3. Tính toán chi tiêu thực tế tháng này
+        // 3. Tính toán chi tiêu thực tế tháng này của miền múi giờ Việt Nam
         LocalDate now = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endOfMonth = now.withDayOfMonth(now.lengthOfMonth()).atTime(23, 59, 59, 999999999);
@@ -72,14 +77,19 @@ public class DashboardController {
                 long amt = tx.getAmount().longValue();
                 totalSpent += amt;
                 String cat = tx.getCategory() != null ? tx.getCategory().toLowerCase() : "";
-                if ("food".equals(cat)) {
-                    spentFood += amt;
-                } else if ("transport".equals(cat)) {
-                    spentTransport += amt;
-                } else if ("shopping".equals(cat)) {
-                    spentShopping += amt;
-                } else {
-                    spentOther += amt;
+                switch (cat) {
+                    case "food":
+                        spentFood += amt;
+                        break;
+                    case "transport":
+                        spentTransport += amt;
+                        break;
+                    case "shopping":
+                        spentShopping += amt;
+                        break;
+                    default:
+                        spentOther += amt;
+                        break;
                 }
             }
         }
@@ -87,20 +97,21 @@ public class DashboardController {
         // 4. Lấy cảnh báo nợ từ DebtService
         DebtSummaryResponse debtSummary = debtService.getDebtSummary(userId);
 
-        // 5. Phân bổ ngân sách danh mục
+        // 5. Phân bổ ngân sách danh mục khớp chuẩn tỉ lệ hiển thị của Mobile UI
         List<DashboardResponse.BudgetCategoryUiDTO> categories = new ArrayList<>();
         categories.add(new DashboardResponse.BudgetCategoryUiDTO("Ăn uống", spentFood, suggestedBudget.multiply(BigDecimal.valueOf(0.35)).longValue()));
         categories.add(new DashboardResponse.BudgetCategoryUiDTO("Đi lại", spentTransport, suggestedBudget.multiply(BigDecimal.valueOf(0.10)).longValue()));
         categories.add(new DashboardResponse.BudgetCategoryUiDTO("Mua sắm", spentShopping, suggestedBudget.multiply(BigDecimal.valueOf(0.15)).longValue()));
         categories.add(new DashboardResponse.BudgetCategoryUiDTO("Khác", spentOther, suggestedBudget.multiply(BigDecimal.valueOf(0.40)).longValue()));
 
+        // 6. ĐÓNG GÓI DỮ LIỆU: Đảm bảo khớp 100% với DashboardResponse phía Android Studio
         DashboardResponse.DashboardData data = new DashboardResponse.DashboardData(
                 user.getUsername(),
-                user.getHealthScore(),
-                user.getScoreSpending(),
-                user.getScoreDebt(),
-                user.getScoreSaving(),
-                user.getScoreAwareness(),
+                scoreDto.getTotalScore(),
+                scoreDto.getSpendingScore(),
+                scoreDto.getDebtOrReserveScore(),
+                scoreDto.getSavingScore(),
+                scoreDto.getAwarenessScore(),
                 totalSpent,
                 suggestedBudget.longValue(),
                 debtSummary.getAlerts(),
