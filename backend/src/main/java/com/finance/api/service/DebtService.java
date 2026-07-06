@@ -1,5 +1,6 @@
 package com.finance.api.service;
 
+import com.finance.api.dto.request.DebtCreateRequest;
 import com.finance.api.dto.response.DebtAlertDTO;
 import com.finance.api.dto.response.DebtDetailsResponse;
 import com.finance.api.dto.response.DebtSummaryResponse;
@@ -118,6 +119,24 @@ public class DebtService {
         return debts.stream()
                 .map(d -> DebtDetailsResponse.fromEntity(d, now))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public DebtDetailsResponse createDebt(UUID userId, DebtCreateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        Debt debt = new Debt(
+                user,
+                request.getType() != null ? request.getType() : DebtType.OTHER,
+                request.getBalance() != null ? request.getBalance() : BigDecimal.ZERO,
+                request.getMinimumPayment() != null ? request.getMinimumPayment() : BigDecimal.ZERO,
+                request.getDueDate() != null ? request.getDueDate() : LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).plusDays(30),
+                null,
+                true
+        );
+        Debt savedDebt = debtRepository.save(debt);
+        LocalDate now = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        return DebtDetailsResponse.fromEntity(savedDebt, now);
     }
 
     // --- Helper Methods ---

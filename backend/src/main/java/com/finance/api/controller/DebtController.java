@@ -1,5 +1,6 @@
 package com.finance.api.controller;
 
+import com.finance.api.dto.request.DebtCreateRequest;
 import com.finance.api.dto.response.ApiResponse;
 import com.finance.api.dto.response.DebtDetailsResponse;
 import com.finance.api.dto.response.DebtSummaryResponse;
@@ -9,9 +10,7 @@ import com.finance.api.service.DebtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -65,5 +64,26 @@ public class DebtController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<DebtDetailsResponse>> createDebt(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody DebtCreateRequest request) {
+        
+        String username = userDetails.getUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        UUID userId = user.getId();
+        
+        DebtDetailsResponse createdDebt = debtService.createDebt(userId, request);
+
+        ApiResponse<DebtDetailsResponse> response = new ApiResponse<>(
+                201,
+                "Tạo khoản nợ mới thành công",
+                createdDebt
+        );
+
+        return ResponseEntity.status(201).body(response);
     }
 }

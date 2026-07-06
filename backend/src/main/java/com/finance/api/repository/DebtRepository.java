@@ -17,14 +17,19 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
 
     List<Debt> findByUserIdAndIsActive(UUID userId, Boolean isActive);
 
-    // Tìm các khoản nợ thẻ tín dụng sắp đến hạn trong vòng 12 ngày của tất cả user
+    // Tìm các khoản nợ theo loại sắp đến hạn trong vòng 12 ngày của tất cả user
     @Query("SELECT d FROM Debt d WHERE d.isActive = true " +
-           "AND d.type = com.finance.api.entity.DebtType.CREDIT_CARD " +
+           "AND d.type = :type " +
            "AND d.dueDate BETWEEN :today AND :targetDate")
-    List<Debt> findUpcomingCreditCardDebts(
+    List<Debt> findUpcomingDebtsByType(
             @Param("today") LocalDate today, 
-            @Param("targetDate") LocalDate targetDate
+            @Param("targetDate") LocalDate targetDate,
+            @Param("type") com.finance.api.entity.DebtType type
     );
+
+    default List<Debt> findUpcomingCreditCardDebts(LocalDate today, LocalDate targetDate) {
+        return findUpcomingDebtsByType(today, targetDate, com.finance.api.entity.DebtType.CREDIT_CARD);
+    }
 
     // Đếm số khoản nợ trễ hạn thanh toán của user
     @Query("SELECT COUNT(d) FROM Debt d WHERE d.user.id = :userId AND d.isActive = true AND d.overdueSince IS NOT NULL")

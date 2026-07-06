@@ -121,7 +121,11 @@ fun RegisterScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
-                        onClick = { navController?.navigate("onboarding") },
+                        onClick = {
+                            viewModel?.register(name, email, password) {
+                                navController?.navigate("onboarding")
+                            } ?: navController?.navigate("onboarding")
+                        },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = MaterialTheme.shapes.small,
                         colors = ButtonDefaults.buttonColors(

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres_db:
     # Dùng bản alpine cho nhẹ máy, khởi động cực nhanh
@@ -16,6 +14,19 @@ services:
     volumes:
       # Ánh xạ thư mục để dữ liệu không bị mất khi tắt Docker
       - pgdata:/var/lib/postgresql/data
+
+  backend_api:
+    build: .
+    container_name: finance_backend
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/finance_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password_cua_ban
+    ports:
+      - "8088:8080"
+    depends_on:
+      - postgres_db
 
 volumes:
   # Khai báo volume lưu trữ liên tục (Persistent Storage)

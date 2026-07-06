@@ -30,3 +30,10 @@ data class DebtDetails(
     val overdueSince: String?,
     val isActive: Boolean
 )
+
+data class DebtCreateRequest(
+    val type: String,
+    val balance: Double,
+    val minimumPayment: Double,
+    val dueDate: String
+)

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">moblie</string>
+    <string name="accessibility_service_description">AI Financial Advisor cần quyền Trợ năng để phát hiện và ghi nhận các giao dịch ngân hàng một cách tự động, an toàn và bảo mật.</string>
 </resources>

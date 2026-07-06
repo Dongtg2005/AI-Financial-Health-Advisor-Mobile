@@ -18,10 +18,12 @@ import com.example.mobile.ui.components.GlassCard
 @Preview(showBackground = true, showSystemUi = true, name = "LoginScreen")
 @Composable
 fun LoginScreen(
-    navController: NavController? = null // Nullable để Preview không cần NavController thật
+    navController: NavController? = null, // Nullable để Preview không cần NavController thật
+    viewModel: AuthViewModel? = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val isLoading = viewModel?.isLoading?.collectAsState()?.value ?: false
 
     Box(modifier = Modifier.fillMaxSize()) {
         AuroraBackground()
@@ -79,11 +81,20 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
-                        onClick = { navController?.navigate("onboarding") },
+                        onClick = {
+                            viewModel?.login(email, password) {
+                                navController?.navigate("onboarding")
+                            } ?: navController?.navigate("onboarding")
+                        },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = MaterialTheme.shapes.small
+                        shape = MaterialTheme.shapes.small,
+                        enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading
                     ) {
-                        Text("Đăng nhập", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.W800)
+                        if (isLoading) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("Đăng nhập", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.W800)
+                        }
                     }
                 }
             }

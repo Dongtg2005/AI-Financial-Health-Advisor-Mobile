@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mobile.ui.auth.LoginScreen
 import com.example.mobile.ui.auth.RegisterScreen
 import com.example.mobile.ui.dashboard.DashboardScreen
+import com.example.mobile.ui.debts.DebtScreen
 import com.example.mobile.ui.transactions.TransactionsScreen
 import com.example.mobile.ui.profile.ProfileScreen
 import com.example.mobile.ui.settings.SettingsScreen
@@ -18,6 +19,7 @@ sealed class Screen(val route: String) {
     object Onboarding : Screen("onboarding")
     object Dashboard : Screen("dashboard")
     object Transactions : Screen("transactions")
+    object Debts : Screen("debts")
     object Profile : Screen("profile")
     object Settings : Screen("settings")
 }
@@ -49,6 +51,9 @@ fun AppNavigation() {
         }
         composable(Screen.Transactions.route) {
             TransactionsScreen(navController)
+        }
+        composable(Screen.Debts.route) {
+            DebtScreen(navController = navController)
         }
         composable(Screen.Profile.route) {
             ProfileScreen(navController)
