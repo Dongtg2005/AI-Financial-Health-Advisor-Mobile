@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: password_cua_ban
     ports:
       # Ánh xạ cổng: [Cổng máy tính] : [Cổng bên trong Docker]
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       # Ánh xạ thư mục để dữ liệu không bị mất khi tắt Docker
       - pgdata:/var/lib/postgresql/data

@@ -9,6 +9,9 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
+import retrofit2.http.PUT
+import retrofit2.http.Path
+
 interface DebtApiService {
     @GET("api/v1/dashboard/summary")
     suspend fun getDashboardSummary(): DashboardResponse
@@ -21,4 +24,10 @@ interface DebtApiService {
 
     @POST("api/v1/debts")
     suspend fun createDebt(@Body request: DebtCreateRequest): ApiResponse<DebtDetails>
+
+    @PUT("api/v1/debts/{id}/payoff")
+    suspend fun payoffDebt(@Path("id") debtId: String): ApiResponse<DebtDetails>
+
+    @GET("api/v1/dashboard/score-history")
+    suspend fun getScoreHistory(): com.example.mobile.data.network.dto.ScoreHistoryResponse
 }

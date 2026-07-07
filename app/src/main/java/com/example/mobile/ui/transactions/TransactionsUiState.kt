@@ -6,5 +6,6 @@ data class TransactionsUiState(
     val transactions: List<TransactionResponseDTO> = emptyList(),
     val filteredTransactions: List<TransactionResponseDTO> = emptyList(),
     val selectedCategory: String = "Tất cả",
+    val searchQuery: String = "",
     val errorMessage: String? = null
 )

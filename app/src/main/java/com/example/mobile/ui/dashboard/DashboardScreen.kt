@@ -29,6 +29,8 @@ import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.AppLogo
 import com.example.mobile.ui.components.BottomNav
 
+import androidx.compose.foundation.clickable
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -152,7 +154,11 @@ fun DashboardScreen(
             ) {
 
                 item {
-                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { navController.navigate("score_history") }
+                    ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()

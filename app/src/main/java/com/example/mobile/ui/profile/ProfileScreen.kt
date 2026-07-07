@@ -42,6 +42,14 @@ fun ProfileScreen(
         }
     }
 
+    val tokenManager = remember { com.example.mobile.data.local.TokenManager(context) }
+    val userName = tokenManager.getUserName()
+    val suggestedBudget = tokenManager.getSuggestedBudget()
+    val formattedBudget = remember(suggestedBudget) {
+        val formatter = java.text.DecimalFormat("#,###")
+        formatter.format(suggestedBudget) + " VNĐ"
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         AuroraBackground()
 
@@ -87,7 +95,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = "Trần Ghi Đông",
+                            text = userName,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.W800,
                             color = Color(0xFF1A237E)
@@ -105,7 +113,7 @@ fun ProfileScreen(
                 GlassCard(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
                     Column {
                         Text(
-                            text = "Tổng tài sản tích lũy",
+                            text = "Ngân sách tháng này",
                             fontSize = 13.sp,
                             color = Color(0xFF1A237E).copy(alpha = 0.6f)
                         )
@@ -115,7 +123,7 @@ fun ProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (isBalanceVisible) "28.500.000 VNĐ" else "•••••• VNĐ",
+                                text = if (isBalanceVisible) formattedBudget else "•••••• VNĐ",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.W900,
                                 color = Color(0xFF1A237E)

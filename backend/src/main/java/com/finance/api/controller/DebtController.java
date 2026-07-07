@@ -86,4 +86,25 @@ public class DebtController {
 
         return ResponseEntity.status(201).body(response);
     }
+
+    @PutMapping("/{id}/payoff")
+    public ResponseEntity<ApiResponse<DebtDetailsResponse>> payoffDebt(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID id) {
+        
+        String username = userDetails.getUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        UUID userId = user.getId();
+        
+        DebtDetailsResponse paidDebt = debtService.payoffDebt(userId, id);
+
+        ApiResponse<DebtDetailsResponse> response = new ApiResponse<>(
+                200,
+                "Tất toán khoản nợ thành công",
+                paidDebt
+        );
+
+        return ResponseEntity.ok(response);
+    }
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
@@ -14,15 +15,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile.ui.components.AuroraBackground
 import com.example.mobile.ui.components.GlassCard
 import com.example.mobile.ui.dashboard.components.TransactionItem
 import com.example.mobile.ui.theme.*
+import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,43 +35,143 @@ fun TransactionsScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    var showAddSheet by remember { mutableStateOf(false) }
+
+    // Bottom sheet thêm giao dịch
+    if (showAddSheet) {
+        TransactionAddSheet(
+            onDismiss = { showAddSheet = false },
+            onConfirm = { amount, category, type ->
+                showAddSheet = false
+                viewModel.saveTransaction(amount, category, type)
+            }
+        )
+    }
+
+    TransactionsScreenContent(
+        state = state,
+        isLoading = isLoading,
+        navController = navController,
+        onCategorySelected = { category -> viewModel.changeCategoryFilter(category) },
+        onAddClick = { showAddSheet = true },
+        onSearchQueryChanged = { query -> viewModel.changeSearchQuery(query) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TransactionsScreenContent(
+    state: TransactionsUiState,
+    isLoading: Boolean,
+    navController: NavController? = null,
+    onCategorySelected: (String) -> Unit = {},
+    onAddClick: () -> Unit = {},
+    onSearchQueryChanged: (String) -> Unit = {}
+) {
+    var isSearching by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AuroraBackground()
 
         Scaffold(
             containerColor = Color.Transparent,
-            modifier = Modifier.statusBarsPadding(),
             topBar = {
                 TopAppBar(
+                    modifier = Modifier.statusBarsPadding(),
                     title = {
-                        Text(
-                            "Lịch sử giao dịch",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.W800,
-                            color = Color(0xFF1A237E)
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController?.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color(0xFF1A237E)
+                        if (isSearching) {
+                            OutlinedTextField(
+                                value = state.searchQuery,
+                                onValueChange = onSearchQueryChanged,
+                                placeholder = { Text("Tìm kiếm giao dịch...", color = Color(0xFF1A237E).copy(alpha = 0.5f)) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF1A237E)),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF1A237E),
+                                    unfocusedBorderColor = Color(0xFF1A237E).copy(alpha = 0.3f)
+                                ),
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Search,
+                                        contentDescription = null,
+                                        tint = Color(0xFF1A237E)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (state.searchQuery.isNotEmpty()) {
+                                        IconButton(onClick = { onSearchQueryChanged("") }) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Close,
+                                                contentDescription = "Xóa tìm kiếm",
+                                                tint = Color(0xFF1A237E)
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        } else {
+                            Text(
+                                "Lịch sử giao dịch",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.W800,
+                                color = Color(0xFF1A237E)
                             )
                         }
                     },
+                    navigationIcon = {
+                        if (isSearching) {
+                            IconButton(onClick = {
+                                isSearching = false
+                                onSearchQueryChanged("")
+                            }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                    contentDescription = "Đóng tìm kiếm",
+                                    tint = Color(0xFF1A237E)
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = { navController?.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color(0xFF1A237E)
+                                )
+                            }
+                        }
+                    },
                     actions = {
-                        IconButton(onClick = { /* Search Action */ }) {
-                            Icon(
-                                imageVector = Icons.Rounded.Search,
-                                contentDescription = "Search",
-                                tint = Color(0xFF1A237E)
-                            )
+                        if (!isSearching) {
+                            IconButton(onClick = { isSearching = true }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Search,
+                                    contentDescription = "Tìm kiếm",
+                                    tint = Color(0xFF1A237E)
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = onAddClick,
+                    containerColor = Color(0xFF1A237E),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = "Them giao dich",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         ) { padding ->
             Column(
@@ -76,10 +179,9 @@ fun TransactionsScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                // Thanh chọn Bộ lọc Danh mục (Ăn uống, Đi lại, Mua sắm...)
                 CategoryFilterRow(
                     selectedCategory = state.selectedCategory,
-                    onCategorySelected = { category -> viewModel.changeCategoryFilter(category) }
+                    onCategorySelected = onCategorySelected
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -91,7 +193,7 @@ fun TransactionsScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 32.dp, start = 16.dp, end = 16.dp, top = 8.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp, start = 16.dp, end = 16.dp, top = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         if (state.filteredTransactions.isEmpty()) {
@@ -102,23 +204,39 @@ fun TransactionsScreen(
                                         .padding(top = 80.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = "Không có giao dịch nào trong danh mục này",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color(0xFF1A237E).copy(alpha = 0.6f),
-                                        fontWeight = FontWeight.W600
-                                    )
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Receipt,
+                                            contentDescription = null,
+                                            tint = Color(0xFF1A237E).copy(alpha = 0.25f),
+                                            modifier = Modifier.size(56.dp)
+                                        )
+                                        Text(
+                                            text = "Chua co giao dich nao",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = Color(0xFF1A237E).copy(alpha = 0.6f),
+                                            fontWeight = FontWeight.W700
+                                        )
+                                        Text(
+                                            text = "Nhan + de them giao dich dau tien",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color(0xFF1A237E).copy(alpha = 0.4f),
+                                            fontWeight = FontWeight.W500
+                                        )
+                                    }
                                 }
                             }
                         } else {
-                            // Nhóm giao dịch theo ngày cho đẹp mắt giống thiết kế gốc
                             val groupedTransactions = state.filteredTransactions.groupBy { tx ->
                                 try {
                                     val datePart = tx.transactionAt.split("T").first()
                                     val parts = datePart.split("-")
                                     "${parts[2]}/${parts[1]}"
                                 } catch (e: Exception) {
-                                    "Hôm nay"
+                                    "Hom nay"
                                 }
                             }
 
@@ -146,18 +264,20 @@ fun TransactionsScreen(
 
                                                 val timeFormatted = try {
                                                     val timePart = tx.transactionAt.split("T").last()
-                                                    timePart.substring(0, 5) // "09:00"
+                                                    timePart.substring(0, 5)
                                                 } catch (e: Exception) {
                                                     "00:00"
                                                 }
 
                                                 TransactionItem(
                                                     name = when (tx.category.lowercase()) {
-                                                        "food" -> "Ăn uống"
-                                                        "transport" -> "Đi lại"
-                                                        "shopping" -> "Mua sắm"
-                                                        "debt" -> "Trả nợ"
-                                                        else -> "Khác"
+                                                        "food" -> "An uong"
+                                                        "transport" -> "Di lai"
+                                                        "shopping" -> "Mua sam"
+                                                        "debt" -> "Tra no"
+                                                        "income" -> "Thu nhap"
+                                                        "savings" -> "Tiet kiem"
+                                                        else -> "Khac"
                                                     },
                                                     date = timeFormatted,
                                                     amount = tx.amount.toLong(),
@@ -186,12 +306,168 @@ fun TransactionsScreen(
     }
 }
 
+// ─── BOTTOM SHEET THEM GIAO DICH ───────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TransactionAddSheet(
+    onDismiss: () -> Unit,
+    onConfirm: (amount: String, category: String, type: String) -> Unit
+) {
+    var amountText by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("food") }
+    var selectedType by remember { mutableStateOf("EXPENSE") }
+
+    val expenseCategories = listOf(
+        "food" to "An uong",
+        "transport" to "Di lai",
+        "shopping" to "Mua sam",
+        "other" to "Khac"
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Text(
+                "Them giao dich moi",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.W800,
+                color = Color(0xFF1A237E)
+            )
+
+            // Chon loai giao dich
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                listOf("EXPENSE" to "Chi tieu", "INCOME" to "Thu nhap").forEach { (value, label) ->
+                    val isSelected = selectedType == value
+                    Surface(
+                        onClick = {
+                            selectedType = value
+                            selectedCategory = if (value == "INCOME") "income" else "food"
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (isSelected) Color(0xFF1A237E) else Color(0xFFF5F5F5),
+                        border = BorderStroke(
+                            1.5.dp,
+                            if (isSelected) Color(0xFF1A237E) else Color(0xFFE0E0E0)
+                        )
+                    ) {
+                        Text(
+                            label,
+                            modifier = Modifier
+                                .padding(vertical = 14.dp)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.W700,
+                            fontSize = 15.sp,
+                            color = if (isSelected) Color.White else Color(0xFF424242)
+                        )
+                    }
+                }
+            }
+
+            // Nhap so tien
+            OutlinedTextField(
+                value = amountText,
+                onValueChange = { amountText = it.filter { c -> c.isDigit() } },
+                label = { Text("So tien (VND)", fontWeight = FontWeight.W600) },
+                placeholder = { Text("Vi du: 150000") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1A237E),
+                    focusedLabelColor = Color(0xFF1A237E)
+                ),
+                trailingIcon = {
+                    Text("d", fontWeight = FontWeight.W700, color = Color(0xFF1A237E),
+                        modifier = Modifier.padding(end = 8.dp))
+                }
+            )
+
+            // Chon danh muc (chi hien khi Chi tieu)
+            if (selectedType == "EXPENSE") {
+                Text(
+                    "Danh muc",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.W700,
+                    color = Color(0xFF1A237E).copy(alpha = 0.8f)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    expenseCategories.forEach { (value, label) ->
+                        val isSelected = selectedCategory == value
+                        Surface(
+                            onClick = { selectedCategory = value },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) Color(0xFF1A237E).copy(alpha = 0.1f) else Color(0xFFF5F5F5),
+                            border = BorderStroke(
+                                1.5.dp,
+                                if (isSelected) Color(0xFF1A237E) else Color(0xFFE0E0E0)
+                            )
+                        ) {
+                            Text(
+                                label,
+                                modifier = Modifier
+                                    .padding(vertical = 10.dp, horizontal = 2.dp)
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                fontWeight = if (isSelected) FontWeight.W700 else FontWeight.W500,
+                                fontSize = 11.sp,
+                                color = if (isSelected) Color(0xFF1A237E) else Color(0xFF757575)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Nut Luu
+            val isAmountValid = amountText.isNotBlank() &&
+                amountText.toBigDecimalOrNull()?.let { it > BigDecimal.ZERO } == true
+
+            Button(
+                onClick = { if (isAmountValid) onConfirm(amountText, selectedCategory, selectedType) },
+                enabled = isAmountValid,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A237E))
+            ) {
+                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "Luu giao dich",
+                    fontWeight = FontWeight.W800,
+                    fontSize = 16.sp
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun CategoryFilterRow(
     selectedCategory: String,
     onCategorySelected: (String) -> Unit
 ) {
-    val categories = listOf("Tất cả", "Ăn uống", "Đi lại", "Mua sắm", "Trả nợ")
+    val categories = listOf("Tat ca", "An uong", "Di lai", "Mua sam", "Tra no")
     SecondaryScrollableTabRow(
         selectedTabIndex = categories.indexOf(selectedCategory).coerceAtLeast(0),
         containerColor = Color.Transparent,
@@ -228,5 +504,34 @@ fun CategoryFilterRow(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun TransactionsScreenPreview() {
-    TransactionsScreen(navController = rememberNavController())
+    FinanceAppTheme {
+        TransactionsScreenContent(
+            state = TransactionsUiState(
+                transactions = listOf(
+                    com.example.mobile.data.network.dto.TransactionResponseDTO(
+                        id = "1",
+                        userId = "user_id",
+                        type = "EXPENSE",
+                        amount = BigDecimal(250000),
+                        category = "food",
+                        transactionAt = "2026-07-07T12:00:00",
+                        isConfirmed = true
+                    )
+                ),
+                filteredTransactions = listOf(
+                    com.example.mobile.data.network.dto.TransactionResponseDTO(
+                        id = "1",
+                        userId = "user_id",
+                        type = "EXPENSE",
+                        amount = BigDecimal(250000),
+                        category = "food",
+                        transactionAt = "2026-07-07T12:00:00",
+                        isConfirmed = true
+                    )
+                )
+            ),
+            isLoading = false,
+            navController = null
+        )
+    }
 }

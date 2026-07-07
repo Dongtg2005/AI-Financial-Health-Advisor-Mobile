@@ -16,6 +16,8 @@ import com.example.mobile.ui.profile.ProfileScreen
 import com.example.mobile.ui.settings.SettingsScreen
 import com.example.mobile.ui.onboarding.OnboardingScreen
 
+import com.example.mobile.ui.scores.ScoreHistoryScreen
+
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -25,6 +27,7 @@ sealed class Screen(val route: String) {
     object Debts : Screen("debts")
     object Profile : Screen("profile")
     object Settings : Screen("settings")
+    object ScoreHistory : Screen("score_history")
 }
 
 @Composable
@@ -83,6 +86,9 @@ fun AppNavigation() {
         }
         composable(Screen.Settings.route) {
             SettingsScreen(navController)
+        }
+        composable(Screen.ScoreHistory.route) {
+            ScoreHistoryScreen(navController)
         }
     }
 }

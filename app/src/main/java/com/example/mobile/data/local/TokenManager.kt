@@ -23,6 +23,15 @@ class TokenManager(context: Context) {
         private const val KEY_JWT_TOKEN = "jwt_token"
         private const val KEY_SUGGESTED_BUDGET = "suggested_budget"
         private const val KEY_BUDGET_MESSAGE = "budget_message"
+        private const val KEY_USER_NAME = "user_name"
+    }
+
+    fun saveUserName(name: String) {
+        sharedPreferences.edit().putString(KEY_USER_NAME, name).apply()
+    }
+
+    fun getUserName(): String {
+        return sharedPreferences.getString(KEY_USER_NAME, null) ?: "Người dùng"
     }
 
     /**

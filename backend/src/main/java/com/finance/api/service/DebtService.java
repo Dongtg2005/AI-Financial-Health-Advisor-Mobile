@@ -164,4 +164,28 @@ public class DebtService {
     public Debt saveDebt(Debt debt) {
         return debtRepository.save(debt);
     }
+
+    @Transactional
+    public DebtDetailsResponse payoffDebt(UUID userId, UUID debtId) {
+        Debt debt = debtRepository.findById(debtId)
+                .orElseThrow(() -> new RuntimeException("Khoản nợ không tồn tại"));
+
+        if (!debt.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Không có quyền tất toán khoản nợ này");
+        }
+
+        debt.setIsActive(false);
+        Debt savedDebt = debtRepository.save(debt);
+
+        // Cập nhật ngày sạch nợ nếu tất cả các khoản nợ của người dùng đã được tất toán
+        List<Debt> activeDebts = debtRepository.findByUserIdAndIsActive(userId, true);
+        if (activeDebts.isEmpty()) {
+            User user = debt.getUser();
+            user.setDebtFreeSince(LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+            userRepository.save(user);
+        }
+
+        LocalDate now = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        return DebtDetailsResponse.fromEntity(savedDebt, now);
+    }
 }

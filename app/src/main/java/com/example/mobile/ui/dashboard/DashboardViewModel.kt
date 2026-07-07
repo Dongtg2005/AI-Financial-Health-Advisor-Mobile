@@ -70,7 +70,10 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val tokenManager = TokenManager(application)
 
     init {
-        loadDashboardInitialData()
+        // Hiển thị trạng thái loading ngay lập tức, không dùng số liệu hardcoded
+        _uiState.value = DashboardUiState(isLoading = true)
+        // Tải dữ liệu thật từ server ngay khi khởi tạo ViewModel
+        fetchDashboardData()
         listenToGlobalEvents()
     }
 
@@ -78,35 +81,14 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             AppEventBus.events.collectLatest { event ->
                 when (event) {
-                    is AppEvent.OnboardingCompleted, 
-                    is AppEvent.TransactionCreated -> {
+                    is AppEvent.OnboardingCompleted,
+                    is AppEvent.TransactionCreated,
+                    is AppEvent.DebtCreated -> {
                         fetchDashboardData()
                     }
                 }
             }
         }
-    }
-
-    private fun loadDashboardInitialData() {
-        val savedBudget = tokenManager.getSuggestedBudget()
-        val savedMessage = tokenManager.getSuggestedMessage()
-
-        _uiState.value = DashboardUiState(
-            healthScore = 100,
-            scoreBreakdown = ScoreBreakdown(35, 35, 20, 10),
-            totalBudget = if (savedBudget > 0) savedBudget.toLong() else 10_000_000L,
-            totalSpent = 0L, // Bắt đầu chi tiêu từ 0đ sau khi onboarding xong
-            hasAlert = !savedMessage.isNullOrEmpty(),
-            alertTitle = "GỢI Ý NGÂN SÁCH ONBOARDING",
-            alertMessage = savedMessage ?: "",
-            budgetCategories = listOf(
-                BudgetCategoryUi("Ăn uống",  0, if (savedBudget > 0) (savedBudget * 0.35).toLong() else 3_500_000),
-                BudgetCategoryUi("Đi lại",     0, if (savedBudget > 0) (savedBudget * 0.10).toLong() else 1_000_000),
-                BudgetCategoryUi("Mua sắm",  0, if (savedBudget > 0) (savedBudget * 0.15).toLong() else 2_000_000),
-                BudgetCategoryUi("Khác",       0, if (savedBudget > 0) (savedBudget * 0.40).toLong() else 1_500_000)
-            ),
-            recentTransactions = emptyList() // Bắt đầu danh sách trống sau khi onboarding
-        )
     }
 
     /**
@@ -130,6 +112,10 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 if (response.status == 200 && response.data != null) {
                     val serverData = response.data
                     val firstAlert = serverData.alerts.firstOrNull()
+                    
+                    // Lưu dữ liệu thật vào TokenManager để chia sẻ cho màn hình Profile
+                    tokenManager.saveUserName(serverData.userName)
+                    tokenManager.saveSuggestedBudget(serverData.totalBudget.toDouble(), "")
                     
                     _uiState.update { currentState ->
                         currentState.copy(

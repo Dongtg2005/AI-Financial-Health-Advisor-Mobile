@@ -210,7 +210,10 @@ fun DebtScreen(
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
                         items(uiState.debts, key = { it.id }) { debt ->
-                            DebtCard(debt = debt)
+                            DebtCard(
+                                debt = debt,
+                                onPayoffClick = { viewModel.payoffDebt(debt.id) }
+                            )
                         }
                     }
                 }

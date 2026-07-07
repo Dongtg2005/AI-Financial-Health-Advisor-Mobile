@@ -23,4 +23,7 @@ interface DebtDao {
 
     @Query("DELETE FROM debts_local")
     suspend fun clearAll()
+
+    @Query("UPDATE debts_local SET isActive = 0 WHERE id = :debtId")
+    suspend fun markAsPaidOffline(debtId: String)
 }

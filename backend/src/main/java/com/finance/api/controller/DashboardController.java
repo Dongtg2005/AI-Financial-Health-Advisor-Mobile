@@ -25,6 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.finance.api.dto.response.ApiResponse;
+import com.finance.api.dto.response.ScoreHistoryDTO;
+import com.finance.api.repository.FinancialScoreRepository;
+import com.finance.api.entity.FinancialScore;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/v1/dashboard")
 public class DashboardController {
@@ -33,15 +39,47 @@ public class DashboardController {
     private final DebtService debtService;
     private final TransactionRepository transactionRepository;
     private final ScoreCalculationService scoreCalculationService;
+    private final FinancialScoreRepository financialScoreRepository;
 
     public DashboardController(UserRepository userRepository, 
                                DebtService debtService, 
                                TransactionRepository transactionRepository, 
-                               ScoreCalculationService scoreCalculationService) {
+                               ScoreCalculationService scoreCalculationService,
+                               FinancialScoreRepository financialScoreRepository) {
         this.userRepository = userRepository;
         this.debtService = debtService;
         this.transactionRepository = transactionRepository;
         this.scoreCalculationService = scoreCalculationService;
+        this.financialScoreRepository = financialScoreRepository;
+    }
+
+    @GetMapping("/score-history")
+    public ResponseEntity<ApiResponse<List<ScoreHistoryDTO>>> getScoreHistory(@AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        UUID userId = user.getId();
+
+        List<FinancialScore> scores = financialScoreRepository.findByUserIdOrderByWeekStartDateDesc(userId);
+        List<ScoreHistoryDTO> dtos = scores.stream().map(s -> new ScoreHistoryDTO(
+                s.getId().toString(),
+                s.getWeekStartDate(),
+                s.getHealthScore(),
+                s.getSpendingScore(),
+                s.getDebtScore(),
+                s.getSavingScore(),
+                s.getAwarenessScore(),
+                s.getDebtMode() != null ? s.getDebtMode().name() : "DTI",
+                s.getProgressScore() != null ? s.getProgressScore() : 0,
+                s.getInsights()
+        )).collect(Collectors.toList());
+
+        ApiResponse<List<ScoreHistoryDTO>> response = new ApiResponse<>(
+                200,
+                "Lấy lịch sử điểm thành công",
+                dtos
+        );
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/summary")

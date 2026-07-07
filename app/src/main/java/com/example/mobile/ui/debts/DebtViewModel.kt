@@ -124,6 +124,8 @@ class DebtViewModel(application: Application) : AndroidViewModel(application) {
                     )
                     debtDao.insertDebt(entity)
                     _uiState.update { it.copy(isLoading = false) }
+                    // Phát sự kiện toàn cục để Dashboard tự động reload điểm sức khỏe
+                    com.example.mobile.common.AppEventBus.emit(com.example.mobile.common.AppEvent.DebtCreated)
                     onSuccess()
                 } else {
                     _uiState.update {
@@ -157,6 +159,55 @@ class DebtViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
                 onSuccess()
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun payoffDebt(debtId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val response = apiService.payoffDebt(debtId)
+                if (response.status == 200 && response.data != null) {
+                    val dto = response.data
+                    val entity = DebtEntity(
+                        id = dto.id,
+                        type = dto.type,
+                        balance = dto.balance,
+                        minimumPayment = dto.minimumPayment,
+                        dueDate = dto.dueDate,
+                        daysRemaining = dto.daysRemaining,
+                        overdueDays = dto.overdueDays,
+                        overdueSince = dto.overdueSince,
+                        isActive = dto.isActive
+                    )
+                    debtDao.insertDebt(entity)
+
+                    // Phát sự kiện toàn cục để Dashboard tự động reload
+                    com.example.mobile.common.AppEventBus.emit(com.example.mobile.common.AppEvent.DebtCreated)
+                    _uiState.update { it.copy(isLoading = false) }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = response.message ?: "Tất toán khoản nợ thất bại"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                try {
+                    debtDao.markAsPaidOffline(debtId)
+                    com.example.mobile.common.AppEventBus.emit(com.example.mobile.common.AppEvent.DebtCreated)
+                } catch (ex: Exception) {
+                    ex.printStackTrace()
+                }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Đã tất toán offline (mất kết nối máy chủ)"
+                    )
+                }
                 e.printStackTrace()
             }
         }

@@ -103,3 +103,115 @@ VALUES (
     null,
     true
 ) ON CONFLICT (id) DO NOTHING;
+
+-- 5. Bổ sung thêm nhiều giao dịch mẫu phong phú cho ghidong@gmail.com (c81d4e2e-bcf2-11ed-afa1-0242ac120002)
+-- Thu nhập: Lương tháng 45.000.000đ
+INSERT INTO transactions (id, user_id, type, amount, category, entry_method, transaction_at, is_confirmed, confirmed_at)
+VALUES (
+    'e932b13c-41fb-45ba-bf5d-35be196a6b10',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'INCOME',
+    45000000.00,
+    'income',
+    'BATCH',
+    '2026-06-25 08:00:00',
+    true,
+    '2026-06-25 08:00:00'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Chi tiêu: Vé máy bay đi du lịch 4.500.000đ
+INSERT INTO transactions (id, user_id, type, amount, category, entry_method, transaction_at, is_confirmed, confirmed_at)
+VALUES (
+    'e932b13c-41fb-45ba-bf5d-35be196a6b11',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'EXPENSE',
+    4500000.00,
+    'transport',
+    'QUICK_ADD',
+    '2026-06-23 15:30:00',
+    true,
+    '2026-06-23 15:30:00'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Chi tiêu: Ăn tối nhà hàng 1.200.000đ
+INSERT INTO transactions (id, user_id, type, amount, category, entry_method, transaction_at, is_confirmed, confirmed_at)
+VALUES (
+    'e932b13c-41fb-45ba-bf5d-35be196a6b12',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'EXPENSE',
+    1200000.00,
+    'food',
+    'QUICK_ADD',
+    '2026-06-24 19:00:00',
+    true,
+    '2026-06-24 19:00:00'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Chi tiêu: Mua máy pha cà phê 2.800.000đ
+INSERT INTO transactions (id, user_id, type, amount, category, entry_method, transaction_at, is_confirmed, confirmed_at)
+VALUES (
+    'e932b13c-41fb-45ba-bf5d-35be196a6b13',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'EXPENSE',
+    2800000.00,
+    'shopping',
+    'QUICK_ADD',
+    '2026-06-26 11:20:00',
+    true,
+    '2026-06-26 11:20:00'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Chi tiêu: Đổ xăng xe 300.000đ
+INSERT INTO transactions (id, user_id, type, amount, category, entry_method, transaction_at, is_confirmed, confirmed_at)
+VALUES (
+    'e932b13c-41fb-45ba-bf5d-35be196a6b14',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'EXPENSE',
+    300000.00,
+    'transport',
+    'QUICK_ADD',
+    '2026-06-27 09:15:00',
+    true,
+    '2026-06-27 09:15:00'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Chi tiêu: Tiền đóng gói mạng & dịch vụ 850.000đ
+INSERT INTO transactions (id, user_id, type, amount, category, entry_method, transaction_at, is_confirmed, confirmed_at)
+VALUES (
+    'e932b13c-41fb-45ba-bf5d-35be196a6b15',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'EXPENSE',
+    850000.00,
+    'other',
+    'BATCH',
+    '2026-06-28 14:00:00',
+    true,
+    '2026-06-28 14:00:00'
+) ON CONFLICT (id) DO NOTHING;
+
+-- 6. Bổ sung thêm nhiều khoản nợ mẫu (Debts) cho ghidong@gmail.com
+-- Khoản nợ Shopee PayLater: 8.500.000đ (Hạn trả: 2026-07-15, Trả tối thiểu: 850.000đ)
+INSERT INTO debts (id, user_id, type, balance, minimum_payment, due_date, overdue_since, is_active)
+VALUES (
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120015',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'SPAYLATER',
+    pgp_sym_encrypt('8500000', 'FINANCE_SECRET_KEY'),
+    850000.00,
+    '2026-07-15',
+    null,
+    true
+) ON CONFLICT (id) DO NOTHING;
+
+-- Khoản nợ vay tiêu dùng khác: 15.000.000đ (Hạn trả: 2026-07-25, Trả tối thiểu: 1.500.000đ)
+INSERT INTO debts (id, user_id, type, balance, minimum_payment, due_date, overdue_since, is_active)
+VALUES (
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120016',
+    'c81d4e2e-bcf2-11ed-afa1-0242ac120002',
+    'OTHER',
+    pgp_sym_encrypt('15000000', 'FINANCE_SECRET_KEY'),
+    1500000.00,
+    '2026-07-25',
+    null,
+    true
+) ON CONFLICT (id) DO NOTHING;

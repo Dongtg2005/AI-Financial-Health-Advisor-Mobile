@@ -23,6 +23,173 @@ import com.example.mobile.ui.components.GlassCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController = rememberNavController()) {
+
+    // Trang thai dialog hien tai
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showSecurityDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+
+    // ─── Dialogs ─────────────────────────────────────────────────────────────
+
+    if (showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            icon = { Icon(Icons.Rounded.Palette, contentDescription = null, tint = Color(0xFF1A237E)) },
+            title = { Text("Giao dien", fontWeight = FontWeight.W800) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Sang (Hien tai)", "Toi (Sap ra mat)", "Theo he thong (Sap ra mat)").forEach { option ->
+                        val isActive = option.contains("Hien tai")
+                        ListItem(
+                            headlineContent = {
+                                Text(
+                                    option,
+                                    fontWeight = if (isActive) FontWeight.W700 else FontWeight.W500,
+                                    color = if (isActive) Color(0xFF1A237E) else MaterialTheme.colorScheme.onSurface
+                                )
+                            },
+                            leadingContent = {
+                                if (isActive) {
+                                    Icon(
+                                        Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        tint = Color(0xFF1A237E)
+                                    )
+                                } else {
+                                    Spacer(Modifier.size(24.dp))
+                                }
+                            }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeDialog = false }) {
+                    Text("Dong", fontWeight = FontWeight.W700, color = Color(0xFF1A237E))
+                }
+            }
+        )
+    }
+
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            icon = { Icon(Icons.Rounded.Language, contentDescription = null, tint = Color(0xFF1A237E)) },
+            title = { Text("Ngon ngu", fontWeight = FontWeight.W800) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("Tieng Viet (Hien tai)", "English (Coming soon)").forEach { lang ->
+                        val isActive = lang.contains("Hien tai")
+                        ListItem(
+                            headlineContent = {
+                                Text(
+                                    lang,
+                                    fontWeight = if (isActive) FontWeight.W700 else FontWeight.W500,
+                                    color = if (isActive) Color(0xFF1A237E) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            },
+                            leadingContent = {
+                                if (isActive) {
+                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = Color(0xFF1A237E))
+                                } else {
+                                    Spacer(Modifier.size(24.dp))
+                                }
+                            }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text("Dong", fontWeight = FontWeight.W700, color = Color(0xFF1A237E))
+                }
+            }
+        )
+    }
+
+    if (showSecurityDialog) {
+        AlertDialog(
+            onDismissRequest = { showSecurityDialog = false },
+            icon = { Icon(Icons.Rounded.Lock, contentDescription = null, tint = Color(0xFF1A237E)) },
+            title = { Text("Bao mat ung dung", fontWeight = FontWeight.W800) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "He thong bao mat hien tai:",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.W700,
+                        color = Color(0xFF1A237E)
+                    )
+                    val features = listOf(
+                        Icons.Rounded.Lock to "Ma hoa JWT 24 gio",
+                        Icons.Rounded.Shield to "BCrypt mat khau",
+                        Icons.Rounded.Storage to "pgcrypto: ma hoa thu nhap & no",
+                        Icons.Rounded.Key to "EncryptedSharedPreferences tren thiet bi"
+                    )
+                    features.forEach { (icon, label) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(icon, contentDescription = null,
+                                tint = Color(0xFF1A237E), modifier = Modifier.size(18.dp))
+                            Text(label, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.W600)
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Van tay & PIN: Sap tich hop trong phien ban tiep theo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSecurityDialog = false }) {
+                    Text("Da hieu", fontWeight = FontWeight.W700, color = Color(0xFF1A237E))
+                }
+            }
+        )
+    }
+
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            icon = { Icon(Icons.Rounded.Info, contentDescription = null, tint = Color(0xFF1A237E)) },
+            title = { Text("Thong tin ung dung", fontWeight = FontWeight.W800) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(
+                        "Ten ung dung" to "AI Financial Health Advisor",
+                        "Phien ban" to "1.0.0",
+                        "Backend" to "Spring Boot 4.0 / PostgreSQL 15",
+                        "Mobile" to "Android Kotlin / Jetpack Compose",
+                        "Bao mat" to "JWT + pgcrypto AES"
+                    ).forEach { (key, value) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(key, style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                fontWeight = FontWeight.W600)
+                            Text(value, style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.W700, color = Color(0xFF1A237E))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAboutDialog = false }) {
+                    Text("Dong", fontWeight = FontWeight.W700, color = Color(0xFF1A237E))
+                }
+            }
+        )
+    }
+
+    // ─── Main UI ─────────────────────────────────────────────────────────────
+
     Box(modifier = Modifier.fillMaxSize()) {
         AuroraBackground()
 
@@ -33,7 +200,7 @@ fun SettingsScreen(navController: NavController = rememberNavController()) {
                 TopAppBar(
                     title = {
                         Text(
-                            "Cài đặt",
+                            "Cai dat",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.W800
                         )
@@ -53,7 +220,7 @@ fun SettingsScreen(navController: NavController = rememberNavController()) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    "Ứng dụng",
+                    "Ung dung",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.W800,
@@ -64,29 +231,29 @@ fun SettingsScreen(navController: NavController = rememberNavController()) {
                     Column {
                         SettingsItem(
                             icon = Icons.Rounded.Palette,
-                            title = "Giao diện",
-                            subtitle = "Sáng, Tối, Hệ thống",
-                            onClick = {}
+                            title = "Giao dien",
+                            subtitle = "Sang (Hien tai)",
+                            onClick = { showThemeDialog = true }
                         )
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
                         SettingsItem(
                             icon = Icons.Rounded.Language,
-                            title = "Ngôn ngữ",
-                            subtitle = "Tiếng Việt",
-                            onClick = {}
+                            title = "Ngon ngu",
+                            subtitle = "Tieng Viet",
+                            onClick = { showLanguageDialog = true }
                         )
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
                         SettingsItem(
                             icon = Icons.Rounded.Lock,
-                            title = "Bảo mật",
-                            subtitle = "Vân tay, PIN",
-                            onClick = {}
+                            title = "Bao mat",
+                            subtitle = "JWT + pgcrypto + BCrypt",
+                            onClick = { showSecurityDialog = true }
                         )
                     }
                 }
 
                 Text(
-                    "Thông tin",
+                    "Thong tin",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.W800,
@@ -97,10 +264,9 @@ fun SettingsScreen(navController: NavController = rememberNavController()) {
                     Column {
                         SettingsItem(
                             icon = Icons.Rounded.Info,
-                            title = "Phiên bản",
-                            subtitle = "1.0.0 (Premium Gold)",
-                            showChevron = false,
-                            onClick = {}
+                            title = "Phien ban",
+                            subtitle = "1.0.0",
+                            onClick = { showAboutDialog = true }
                         )
                     }
                 }

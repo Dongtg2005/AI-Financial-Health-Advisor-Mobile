@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 sealed class AppEvent {
     object OnboardingCompleted : AppEvent()
     object TransactionCreated : AppEvent()
+    object DebtCreated : AppEvent()
 }
 
 object AppEventBus {
