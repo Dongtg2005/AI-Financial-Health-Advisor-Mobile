@@ -83,8 +83,10 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             viewModel?.login(email, password) {
-                                navController?.navigate("onboarding")
-                            } ?: navController?.navigate("onboarding")
+                                navController?.navigate("dashboard") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            } ?: navController?.navigate("dashboard")
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = MaterialTheme.shapes.small,

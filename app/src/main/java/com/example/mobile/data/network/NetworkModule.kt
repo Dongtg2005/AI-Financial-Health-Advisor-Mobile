@@ -20,14 +20,18 @@ object NetworkModule {
         if (retrofit == null) {
             val tokenManager = TokenManager(context)
 
-            // 1. Tạo Interceptor tự động thêm Bearer Token vào Header của mọi request
+            // 1. Tạo Interceptor tự động thêm Bearer Token vào Header của mọi request (trừ các API Auth)
             val authInterceptor = okhttp3.Interceptor { chain ->
                 val originalRequest = chain.request()
                 val requestBuilder = originalRequest.newBuilder()
 
-                val token = tokenManager.getToken()
-                if (!token.isNullOrEmpty()) {
-                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                val url = originalRequest.url.toString()
+                // Không gắn token cũ khi gọi các endpoint xác thực công khai (login/register)
+                if (!url.contains("/api/v1/auth/")) {
+                    val token = tokenManager.getToken()
+                    if (!token.isNullOrEmpty()) {
+                        requestBuilder.addHeader("Authorization", "Bearer $token")
+                    }
                 }
 
                 chain.proceed(requestBuilder.build())

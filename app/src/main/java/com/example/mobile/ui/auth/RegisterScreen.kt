@@ -123,7 +123,9 @@ fun RegisterScreen(
                     Button(
                         onClick = {
                             viewModel?.register(name, email, password) {
-                                navController?.navigate("onboarding")
+                                navController?.navigate("onboarding") {
+                                    popUpTo("register") { inclusive = true }
+                                }
                             } ?: navController?.navigate("onboarding")
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),

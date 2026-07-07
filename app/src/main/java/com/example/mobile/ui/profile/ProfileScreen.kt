@@ -32,12 +32,16 @@ import com.example.mobile.ui.components.GlassCard
 fun ProfileScreen(
     navController: NavController = rememberNavController(),
     modifier: Modifier = Modifier,
-    onLogoutClick: () -> Unit = {
+    onLogoutClick: (() -> Unit)? = null
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val actualLogoutClick = onLogoutClick ?: {
+        com.example.mobile.data.local.TokenManager(context).clearAuthData()
         navController.navigate("login") {
             popUpTo("dashboard") { inclusive = true }
         }
     }
-) {
+
     Box(modifier = modifier.fillMaxSize()) {
         AuroraBackground()
 
@@ -164,7 +168,7 @@ fun ProfileScreen(
 
                 // HÀNH ĐỘNG NGUY HIỂM (ĐĂNG XUẤT) ĐƯỢC TÁCH RIÊNG KHỎI NHÓM
                 Button(
-                    onClick = onLogoutClick,
+                    onClick = actualLogoutClick,
                     modifier = Modifier.fillMaxWidth().height(54.dp).padding(bottom = 8.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
