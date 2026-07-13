@@ -3,6 +3,7 @@ package com.finance.api.controller;
 import com.finance.api.dto.request.TransactionRequestDTO;
 import com.finance.api.dto.response.ApiResponse;
 import com.finance.api.dto.response.TransactionResponseDTO;
+import com.finance.api.dto.response.SpendingTrendResponseDTO;
 import com.finance.api.entity.User;
 import com.finance.api.service.TransactionService;
 import org.springframework.http.HttpStatus;
@@ -72,6 +73,49 @@ public class TransactionController {
         response.put("status", 200);
         response.put("message", "Đã tiếp nhận ước tính cuối tuần. Hệ thống đã tự động phân bổ dòng tiền mặt.");
         
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportTransactions(@AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = ((User) userDetails).getId();
+        List<com.finance.api.entity.Transaction> transactions = transactionService.getTransactionsEntityByUser(userId);
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("Id,Ngay giao dich,So tien,Danh muc,Loai,Trang thai\n");
+
+        java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        for (com.finance.api.entity.Transaction tx : transactions) {
+            String timeStr = tx.getTransactionAt() != null ? tx.getTransactionAt().format(dtf) : "";
+            csv.append(tx.getId()).append(",")
+               .append(timeStr).append(",")
+               .append(tx.getAmount()).append(",")
+               .append(tx.getCategory() != null ? tx.getCategory() : "").append(",")
+               .append(tx.getType() != null ? tx.getType().name() : "").append(",")
+               .append(tx.getIsConfirmed() ? "Da xac nhan" : "Cho xac nhan").append("\n");
+        }
+
+        byte[] bytes = csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=FinanceReport.csv");
+        headers.set(org.springframework.http.HttpHeaders.CONTENT_TYPE, "text/csv; charset=UTF-8");
+
+        return new ResponseEntity<>(bytes, headers, org.springframework.http.HttpStatus.OK);
+    }
+
+    @GetMapping("/trends")
+    public ResponseEntity<ApiResponse<SpendingTrendResponseDTO>> getSpendingTrends(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        UUID userId = ((User) userDetails).getId();
+        SpendingTrendResponseDTO trends = transactionService.getSpendingTrends(userId);
+        
+        ApiResponse<SpendingTrendResponseDTO> response = new ApiResponse<>(
+                200,
+                "Lấy xu hướng chi tiêu thành công",
+                trends
+        );
         return ResponseEntity.ok(response);
     }
 }

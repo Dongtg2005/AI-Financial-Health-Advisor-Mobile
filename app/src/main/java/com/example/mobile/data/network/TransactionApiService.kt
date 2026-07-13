@@ -1,6 +1,7 @@
 package com.example.mobile.data.network
 
 import com.example.mobile.data.network.dto.ApiResponse
+import com.example.mobile.data.network.dto.SpendingTrendResponseDTO
 import com.example.mobile.data.network.dto.CashWeeklyEstimateRequest
 import com.example.mobile.data.network.dto.TransactionRequestDTO
 import com.example.mobile.data.network.dto.TransactionResponseDTO
@@ -18,6 +19,12 @@ interface TransactionApiService {
 
     @GET("api/v1/transactions")
     suspend fun getTransactions(): ApiResponse<List<TransactionResponseDTO>>
+
+    @GET("api/v1/transactions/trends")
+    suspend fun getSpendingTrends(): ApiResponse<SpendingTrendResponseDTO>
+
+    @GET("api/v1/transactions/export")
+    suspend fun exportTransactions(): okhttp3.ResponseBody
 
     /**
      * TẦNG 2: ĐÓN ĐẦU ENDPOINT ƯỚC TÍNH TIỀN MẶT CUỐI TUẦN
