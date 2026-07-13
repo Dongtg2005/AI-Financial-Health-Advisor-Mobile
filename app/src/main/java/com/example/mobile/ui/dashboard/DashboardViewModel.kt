@@ -42,7 +42,8 @@ data class DashboardUiState(
     val budgetCategories: List<BudgetCategoryUi> = emptyList(),
     val recentTransactions: List<TransactionUi> = emptyList(),
     val showInsightPopup: Boolean = false,
-    val currentInsightData: MicroInsight? = null
+    val currentInsightData: MicroInsight? = null,
+    val adminNote: String? = null
 )
 
 data class BudgetCategoryUi(
@@ -140,6 +141,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                                 else -> "GỢI Ý NGÂN SÁCH ONBOARDING"
                             },
                             alertMessage = firstAlert?.message ?: tokenManager.getSuggestedMessage() ?: "",
+                            adminNote = serverData.adminNote,
                             
                             // Map danh mục chi tiêu thật từ DB lên UI
                             budgetCategories = serverData.budgetCategories.map { dto ->
@@ -308,6 +310,19 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                         errorMessage = e.localizedMessage ?: "Lỗi kết nối đến máy chủ"
                     ) 
                 }
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun clearAdminWarning() {
+        viewModelScope.launch {
+            try {
+                val response = apiService.clearWarning()
+                if (response.status == 200) {
+                    _uiState.update { it.copy(adminNote = null) }
+                }
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }

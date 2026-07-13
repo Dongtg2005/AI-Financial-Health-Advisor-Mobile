@@ -16,7 +16,8 @@ data class DashboardResponse(
         val totalSpent: Long,
         val totalBudget: Long,
         val alerts: List<DebtAlertUi>,
-        val budgetCategories: List<BudgetCategoryUiDTO>
+        val budgetCategories: List<BudgetCategoryUiDTO>,
+        val adminNote: String?
     )
 
     data class DebtAlertUi(

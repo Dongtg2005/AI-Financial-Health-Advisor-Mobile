@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -41,7 +42,7 @@ fun DashboardScreen(
     val state = if (viewModel != null) {
         viewModel.uiState.collectAsState().value
     } else {
-        DashboardUiState(userName = "Trần Ghi Đông") // Thay đổi text cứng preview sang tên Đông chuẩn
+        DashboardUiState(userName = "Trần Ghi Đông")
     }
     var showSheet by remember { mutableStateOf(false) }
     var showCashEstimateSheet by remember { mutableStateOf(false) }
@@ -153,6 +154,59 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 
+                if (!state.adminNote.isNullOrBlank()) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFC62828).copy(alpha = 0.1f)
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFC62828).copy(alpha = 0.2f))
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Warning,
+                                        contentDescription = null,
+                                        tint = Color(0xFFC62828),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "NHẮC NHỞ TỪ BAN QUẢN TRỊ AI",
+                                        fontWeight = FontWeight.W900,
+                                        color = Color(0xFFC62828),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = state.adminNote,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFF37474F),
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Button(
+                                    onClick = { viewModel?.clearAdminWarning() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFC62828),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.align(Alignment.End),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text("Đã hiểu", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 item {
                     GlassCard(
                         modifier = Modifier
@@ -217,6 +271,58 @@ fun DashboardScreen(
                             }
                         }
                     )
+                }
+
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { navController.navigate("spending_trends") },
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF1A237E).copy(alpha = 0.05f)
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1A237E).copy(alpha = 0.1f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.TrendingUp,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1A237E),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column {
+                                    Text(
+                                        text = "Phân tích xu hướng chi tiêu 📊",
+                                        fontWeight = FontWeight.W800,
+                                        color = Color(0xFF1A237E),
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        text = "So sánh chi tiêu theo tháng, quý, năm",
+                                        color = Color(0xFF1A237E).copy(alpha = 0.6f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowForwardIos,
+                                contentDescription = null,
+                                tint = Color(0xFF1A237E),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
 
                 item {

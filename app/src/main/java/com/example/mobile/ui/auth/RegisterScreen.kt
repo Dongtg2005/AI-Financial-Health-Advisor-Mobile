@@ -122,8 +122,9 @@ fun RegisterScreen(
 
                     Button(
                         onClick = {
-                            viewModel?.register(name, email, password) {
-                                navController?.navigate("onboarding") {
+                            viewModel?.register(name, email, password) { role ->
+                                val target = if (role == "ADMIN") "admin_dashboard" else "onboarding"
+                                navController?.navigate(target) {
                                     popUpTo("register") { inclusive = true }
                                 }
                             } ?: navController?.navigate("onboarding")

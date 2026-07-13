@@ -30,4 +30,7 @@ interface DebtApiService {
 
     @GET("api/v1/dashboard/score-history")
     suspend fun getScoreHistory(): com.example.mobile.data.network.dto.ScoreHistoryResponse
+
+    @POST("api/v1/users/clear-warning")
+    suspend fun clearWarning(): ApiResponse<Unit>
 }

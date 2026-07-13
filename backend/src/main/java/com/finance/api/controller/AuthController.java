@@ -50,10 +50,14 @@ public class AuthController {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         final String jwt = jwtUtils.generateToken(userDetails);
 
+        String role = "USER";
+        if (userDetails instanceof User) {
+            role = ((User) userDetails).getRole();
+        }
         ApiResponse<AuthResponse> response = new ApiResponse<>(
                 200,
                 "Đăng nhập thành công",
-                new AuthResponse(jwt)
+                new AuthResponse(jwt, role)
         );
 
         return ResponseEntity.ok(response);
@@ -81,7 +85,7 @@ public class AuthController {
         ApiResponse<AuthResponse> response = new ApiResponse<>(
                 201,
                 "Đăng ký tài khoản thành công",
-                new AuthResponse(jwt)
+                new AuthResponse(jwt, savedUser.getRole())
         );
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);

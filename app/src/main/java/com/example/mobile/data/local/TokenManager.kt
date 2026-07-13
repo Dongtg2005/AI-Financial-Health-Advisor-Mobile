@@ -24,6 +24,15 @@ class TokenManager(context: Context) {
         private const val KEY_SUGGESTED_BUDGET = "suggested_budget"
         private const val KEY_BUDGET_MESSAGE = "budget_message"
         private const val KEY_USER_NAME = "user_name"
+        private const val KEY_USER_ROLE = "user_role"
+    }
+
+    fun saveUserRole(role: String) {
+        sharedPreferences.edit().putString(KEY_USER_ROLE, role).apply()
+    }
+
+    fun getUserRole(): String {
+        return sharedPreferences.getString(KEY_USER_ROLE, null) ?: "USER"
     }
 
     fun saveUserName(name: String) {

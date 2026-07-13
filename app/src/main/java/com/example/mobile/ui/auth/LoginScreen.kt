@@ -82,8 +82,9 @@ fun LoginScreen(
 
                     Button(
                         onClick = {
-                            viewModel?.login(email, password) {
-                                navController?.navigate("dashboard") {
+                            viewModel?.login(email, password) { role ->
+                                val target = if (role.startsWith("ADMIN")) "admin_dashboard" else "dashboard"
+                                navController?.navigate(target) {
                                     popUpTo("login") { inclusive = true }
                                 }
                             } ?: navController?.navigate("dashboard")

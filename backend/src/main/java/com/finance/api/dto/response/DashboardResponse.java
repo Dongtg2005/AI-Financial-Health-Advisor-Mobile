@@ -35,10 +35,11 @@ public class DashboardResponse {
         private long totalBudget;
         private List<DebtAlertDTO> alerts;
         private List<BudgetCategoryUiDTO> budgetCategories;
+        private String adminNote;
 
         public DashboardData() {}
 
-        public DashboardData(String userName, int healthScore, int scoreSpending, int scoreDebt, int scoreSaving, int scoreAwareness, long totalSpent, long totalBudget, List<DebtAlertDTO> alerts, List<BudgetCategoryUiDTO> budgetCategories) {
+        public DashboardData(String userName, int healthScore, int scoreSpending, int scoreDebt, int scoreSaving, int scoreAwareness, long totalSpent, long totalBudget, List<DebtAlertDTO> alerts, List<BudgetCategoryUiDTO> budgetCategories, String adminNote) {
             this.userName = userName;
             this.healthScore = healthScore;
             this.scoreSpending = scoreSpending;
@@ -49,6 +50,7 @@ public class DashboardResponse {
             this.totalBudget = totalBudget;
             this.alerts = alerts;
             this.budgetCategories = budgetCategories;
+            this.adminNote = adminNote;
         }
 
         public String getUserName() { return userName; }
@@ -80,6 +82,9 @@ public class DashboardResponse {
 
         public List<BudgetCategoryUiDTO> getBudgetCategories() { return budgetCategories; }
         public void setBudgetCategories(List<BudgetCategoryUiDTO> budgetCategories) { this.budgetCategories = budgetCategories; }
+
+        public String getAdminNote() { return adminNote; }
+        public void setAdminNote(String adminNote) { this.adminNote = adminNote; }
     }
 
     public static class BudgetCategoryUiDTO {

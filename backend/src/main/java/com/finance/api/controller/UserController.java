@@ -46,4 +46,65 @@ public class UserController {
         );
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/clear-warning")
+    public ResponseEntity<ApiResponse<Void>> clearWarning(@AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = ((User) userDetails).getId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setAdminNote(null);
+        userRepository.save(user);
+
+        ApiResponse<Void> response = new ApiResponse<>(
+                200,
+                "Đã tắt cảnh báo từ quản trị viên",
+                null
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<com.finance.api.dto.response.UserProfileResponse>> getProfile(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID userId = ((User) userDetails).getId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        com.finance.api.dto.response.UserProfileResponse data = new com.finance.api.dto.response.UserProfileResponse(
+                user.getUsername(),
+                user.getCreatedAt(),
+                user.getSuggestedBudget(),
+                user.isDailyNotifEnabled(),
+                user.isAiAlertsEnabled(),
+                user.getBillingCycleDay()
+        );
+
+        ApiResponse<com.finance.api.dto.response.UserProfileResponse> response = new ApiResponse<>(
+                200,
+                "Lấy thông tin cá nhân thành công",
+                data
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/settings")
+    public ResponseEntity<ApiResponse<Void>> updateSettings(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody com.finance.api.dto.request.UpdateSettingsRequest request) {
+        UUID userId = ((User) userDetails).getId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        user.setDailyNotifEnabled(request.isDailyNotifEnabled());
+        user.setAiAlertsEnabled(request.isAiAlertsEnabled());
+        user.setBillingCycleDay(request.getBillingCycleDay());
+        userRepository.save(user);
+
+        ApiResponse<Void> response = new ApiResponse<>(
+                200,
+                "Cập nhật cài đặt thành công",
+                null
+        );
+        return ResponseEntity.ok(response);
+    }
 }

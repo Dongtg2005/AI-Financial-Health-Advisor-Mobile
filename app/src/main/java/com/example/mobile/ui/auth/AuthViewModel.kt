@@ -21,20 +21,25 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val authApiService = NetworkModule.createService(application, AuthApiService::class.java)
     private val tokenManager = TokenManager(application)
 
-    fun login(email: String, pass: String, onSuccess: () -> Unit) {
-        if (email.isBlank() || pass.isBlank()) {
+    fun login(email: String, pass: String, onSuccess: (role: String) -> Unit) {
+        val trimmedEmail = email.trim()
+        val trimmedPass = pass.trim()
+        if (trimmedEmail.isBlank() || trimmedPass.isBlank()) {
             Toast.makeText(getApplication(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show()
             return
         }
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = authApiService.login(AuthRequest(email, pass))
+                val response = authApiService.login(AuthRequest(trimmedEmail, trimmedPass))
                 if (response.isSuccessful && response.body() != null) {
                     val token = response.body()?.data?.token
+                    val role = response.body()?.data?.role ?: "USER"
                     if (!token.isNullOrEmpty()) {
                         tokenManager.saveJwtToken(token)
-                        onSuccess()
+                        tokenManager.saveUserRole(role)
+                        tokenManager.saveUserName(trimmedEmail)
+                        onSuccess(role)
                     } else {
                         Toast.makeText(getApplication(), "Lỗi: Không nhận được token từ server", Toast.LENGTH_SHORT).show()
                     }
@@ -49,20 +54,25 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun register(name: String, email: String, pass: String, onSuccess: () -> Unit) {
-        if (email.isBlank() || pass.isBlank()) {
+    fun register(name: String, email: String, pass: String, onSuccess: (role: String) -> Unit) {
+        val trimmedEmail = email.trim()
+        val trimmedPass = pass.trim()
+        if (trimmedEmail.isBlank() || trimmedPass.isBlank()) {
             Toast.makeText(getApplication(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show()
             return
         }
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = authApiService.register(RegisterRequest(email, pass, 0.0))
+                val response = authApiService.register(RegisterRequest(trimmedEmail, trimmedPass, 0.0))
                 if (response.isSuccessful && response.body() != null) {
                     val token = response.body()?.data?.token
+                    val role = response.body()?.data?.role ?: "USER"
                     if (!token.isNullOrEmpty()) {
                         tokenManager.saveJwtToken(token)
-                        onSuccess()
+                        tokenManager.saveUserRole(role)
+                        tokenManager.saveUserName(trimmedEmail)
+                        onSuccess(role)
                     } else {
                         Toast.makeText(getApplication(), "Lỗi: Không nhận được token từ server", Toast.LENGTH_SHORT).show()
                     }

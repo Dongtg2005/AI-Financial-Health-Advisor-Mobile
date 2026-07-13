@@ -28,6 +28,8 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profile")
     object Settings : Screen("settings")
     object ScoreHistory : Screen("score_history")
+    object AdminDashboard : Screen("admin_dashboard")
+    object SpendingTrends : Screen("spending_trends")
 }
 
 @Composable
@@ -35,10 +37,16 @@ fun AppNavigation() {
     val context = LocalContext.current
     val tokenManager = remember { TokenManager(context) }
 
-    // Kiểm tra Token đã lưu: nếu có thì vào thẳng Dashboard, nếu chưa thì vào Login
+    // Kiểm tra Token đã lưu: nếu có thì vào thẳng Dashboard/AdminDashboard, nếu chưa thì vào Login
     val startRoute = remember {
-        if (!tokenManager.getToken().isNullOrEmpty()) {
-            Screen.Dashboard.route
+        val token = tokenManager.getToken()
+        val role = tokenManager.getUserRole()
+        if (!token.isNullOrEmpty()) {
+            if (role.startsWith("ADMIN")) {
+                Screen.AdminDashboard.route
+            } else {
+                Screen.Dashboard.route
+            }
         } else {
             Screen.Login.route
         }
@@ -89,6 +97,20 @@ fun AppNavigation() {
         }
         composable(Screen.ScoreHistory.route) {
             ScoreHistoryScreen(navController)
+        }
+        composable(Screen.AdminDashboard.route) {
+            com.example.mobile.ui.admin.AdminDashboardScreen(
+                navController = navController,
+                onLogoutClick = {
+                    tokenManager.clearAuthData()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.AdminDashboard.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Screen.SpendingTrends.route) {
+            com.example.mobile.ui.trends.SpendingTrendsScreen(navController)
         }
     }
 }
