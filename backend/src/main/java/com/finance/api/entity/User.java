@@ -5,6 +5,7 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -67,10 +68,53 @@ public class User implements UserDetails {
     @Column(name = "score_awareness")
     private int scoreAwareness = 10;
 
+    @Column(name = "role", length = 20)
+    private String role = "USER";
+
+    @Column(name = "is_enabled")
+    private boolean isEnabled = true;
+
+    @Column(name = "admin_note", length = 500)
+    private String adminNote;
+
+    @Column(name = "daily_notif_enabled")
+    private boolean dailyNotifEnabled = true;
+
+    @Column(name = "ai_alerts_enabled")
+    private boolean aiAlertsEnabled = true;
+
+    @Column(name = "billing_cycle_day")
+    private int billingCycleDay = 5;
+
     // 🔒 CHƯƠNG 3 - KHÓA LẠC QUAN: Chống tranh chấp dữ liệu dòng tiền toàn cục
     @Version
     @Column(name = "version", nullable = false)
     private Integer version = 0;
+
+    // Getters and Setters for settings fields
+    public boolean isDailyNotifEnabled() {
+        return dailyNotifEnabled;
+    }
+
+    public void setDailyNotifEnabled(boolean dailyNotifEnabled) {
+        this.dailyNotifEnabled = dailyNotifEnabled;
+    }
+
+    public boolean isAiAlertsEnabled() {
+        return aiAlertsEnabled;
+    }
+
+    public void setAiAlertsEnabled(boolean aiAlertsEnabled) {
+        this.aiAlertsEnabled = aiAlertsEnabled;
+    }
+
+    public int getBillingCycleDay() {
+        return billingCycleDay;
+    }
+
+    public void setBillingCycleDay(int billingCycleDay) {
+        this.billingCycleDay = billingCycleDay;
+    }
 
     // Constructors
     public User() {
@@ -89,7 +133,7 @@ public class User implements UserDetails {
     // UserDetails Override Methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     @Override
@@ -119,7 +163,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isEnabled;
     }
 
     // Getters and Setters
@@ -233,5 +277,29 @@ public class User implements UserDetails {
 
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getAdminNote() {
+        return adminNote;
+    }
+
+    public void setAdminNote(String adminNote) {
+        this.adminNote = adminNote;
+    }
+
+    public boolean getIsEnabled() {
+        return isEnabled;
+    }
+
+    public void setIsEnabled(boolean isEnabled) {
+        this.isEnabled = isEnabled;
     }
 }

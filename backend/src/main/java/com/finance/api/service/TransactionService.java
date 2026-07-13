@@ -4,6 +4,7 @@ import com.finance.api.dto.request.CashWeeklyEstimateRequest;
 import com.finance.api.dto.request.TransactionRequestDTO;
 import com.finance.api.dto.response.TransactionResponseDTO;
 import com.finance.api.dto.response.TransactionSaveResponse;
+import com.finance.api.dto.response.SpendingTrendResponseDTO;
 import com.finance.api.entity.EntryMethod;
 import com.finance.api.entity.Transaction;
 import com.finance.api.entity.TransactionType;
@@ -52,6 +53,11 @@ public class TransactionService {
         return transactions.stream()
                 .map(TransactionResponseDTO::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Transaction> getTransactionsEntityByUser(UUID userId) {
+        return transactionRepository.findByUserIdOrderByTransactionAtDesc(userId);
     }
 
     @Transactional
@@ -167,5 +173,78 @@ public class TransactionService {
 
         // 6. Tính toán động điểm Health Score ngay khi phân bổ xong
         healthScoreService.updateAndGetHealthScore(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public SpendingTrendResponseDTO getSpendingTrends(UUID userId) {
+        LocalDate todayVn = LocalDate.now(VN_ZONE);
+
+        // 1. Monthly spending trends (Last 6 months)
+        List<SpendingTrendResponseDTO.TrendItem> monthly = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            LocalDate targetMonthDate = todayVn.minusMonths(i);
+            LocalDate start = targetMonthDate.withDayOfMonth(1);
+            LocalDate end = targetMonthDate.withDayOfMonth(targetMonthDate.lengthOfMonth());
+            
+            LocalDateTime startDateTime = toSystemDefault(start.atStartOfDay());
+            LocalDateTime endDateTime = toSystemDefault(end.atTime(LocalTime.MAX));
+            
+            BigDecimal totalSpent = transactionRepository.sumAmountByUserIdAndPeriodAndType(
+                    userId, com.finance.api.entity.TransactionType.EXPENSE, startDateTime, endDateTime
+            );
+            monthly.add(new SpendingTrendResponseDTO.TrendItem(
+                    "Tháng " + targetMonthDate.getMonthValue(), totalSpent
+            ));
+        }
+
+        // 2. Quarterly spending trends (Q1 to Q4 of current year)
+        List<SpendingTrendResponseDTO.TrendItem> quarterly = new ArrayList<>();
+        int currentYear = todayVn.getYear();
+        for (int q = 1; q <= 4; q++) {
+            LocalDate start, end;
+            if (q == 1) {
+                start = LocalDate.of(currentYear, 1, 1);
+                end = LocalDate.of(currentYear, 3, 31);
+            } else if (q == 2) {
+                start = LocalDate.of(currentYear, 4, 1);
+                end = LocalDate.of(currentYear, 6, 30);
+            } else if (q == 3) {
+                start = LocalDate.of(currentYear, 7, 1);
+                end = LocalDate.of(currentYear, 9, 30);
+            } else {
+                start = LocalDate.of(currentYear, 10, 1);
+                end = LocalDate.of(currentYear, 12, 31);
+            }
+
+            LocalDateTime startDateTime = toSystemDefault(start.atStartOfDay());
+            LocalDateTime endDateTime = toSystemDefault(end.atTime(LocalTime.MAX));
+
+            BigDecimal totalSpent = transactionRepository.sumAmountByUserIdAndPeriodAndType(
+                    userId, com.finance.api.entity.TransactionType.EXPENSE, startDateTime, endDateTime
+            );
+            quarterly.add(new SpendingTrendResponseDTO.TrendItem(
+                    "Quý " + q, totalSpent
+            ));
+        }
+
+        // 3. Yearly spending trends (Last 3 years)
+        List<SpendingTrendResponseDTO.TrendItem> yearly = new ArrayList<>();
+        for (int i = 2; i >= 0; i--) {
+            int targetYear = currentYear - i;
+            LocalDate start = LocalDate.of(targetYear, 1, 1);
+            LocalDate end = LocalDate.of(targetYear, 12, 31);
+
+            LocalDateTime startDateTime = toSystemDefault(start.atStartOfDay());
+            LocalDateTime endDateTime = toSystemDefault(end.atTime(LocalTime.MAX));
+
+            BigDecimal totalSpent = transactionRepository.sumAmountByUserIdAndPeriodAndType(
+                    userId, com.finance.api.entity.TransactionType.EXPENSE, startDateTime, endDateTime
+            );
+            yearly.add(new SpendingTrendResponseDTO.TrendItem(
+                    String.valueOf(targetYear), totalSpent
+            ));
+        }
+
+        return new SpendingTrendResponseDTO(monthly, quarterly, yearly);
     }
 }

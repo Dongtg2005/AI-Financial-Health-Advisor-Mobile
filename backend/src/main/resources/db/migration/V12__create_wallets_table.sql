@@ -1,0 +1,6 @@
+CREATE TABLE wallets (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00
+);
