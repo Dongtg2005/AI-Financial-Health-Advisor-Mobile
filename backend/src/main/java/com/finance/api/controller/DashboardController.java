@@ -153,7 +153,8 @@ public class DashboardController {
                 totalSpent,
                 suggestedBudget.longValue(),
                 debtSummary.getAlerts(),
-                categories
+                categories,
+                user.getAdminNote()
         );
 
         return ResponseEntity.ok(new DashboardResponse(200, "Lấy thông tin dashboard thành công", data));

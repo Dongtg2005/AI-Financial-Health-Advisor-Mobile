@@ -3,6 +3,7 @@ package com.example.mobile.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -16,6 +17,7 @@ import com.example.mobile.ui.theme.GlassWhite40
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(20.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
@@ -28,7 +30,7 @@ fun GlassCard(
         border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.3f))
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(contentPadding),
             content = content
         )
     }

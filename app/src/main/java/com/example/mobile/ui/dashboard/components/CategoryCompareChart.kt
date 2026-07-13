@@ -31,6 +31,10 @@ fun CategoryCompareChart(
 ) {
     if (categories.isEmpty()) return
 
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val textColor = if (isDark) Color.White else Color(0xFF1A237E)
+    val limitBarColor = if (isDark) Color.White.copy(alpha = 0.4f) else Color(0xFF1A237E).copy(alpha = 0.3f)
+
     // Animation mượt mà đẩy cột mọc từ dưới lên trên
     val animationProgress = remember { Animatable(0f) }
     LaunchedEffect(categories) {
@@ -58,7 +62,7 @@ fun CategoryCompareChart(
                 text = "Chi Tiêu vs Ngân Sách Danh Mục 📊",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.W800,
-                color = Color.White
+                color = textColor
             )
 
             // Vùng không gian Canvas tự vẽ
@@ -106,7 +110,7 @@ fun CategoryCompareChart(
                     val limitX = groupCenterX + (barSpacing / 2)
                     if (limitBarHeight > 0) {
                         drawRoundRect(
-                            color = Color.White.copy(alpha = 0.4f),
+                            color = limitBarColor,
                             topLeft = Offset(limitX, canvasHeight - limitBarHeight),
                             size = Size(barWidth, limitBarHeight),
                             cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx()),
@@ -153,7 +157,7 @@ fun CategoryCompareChart(
                 // Hình vuông viền cho Limit
                 Canvas(modifier = Modifier.size(10.dp)) {
                     drawRoundRect(
-                        color = Color.White.copy(alpha = 0.4f),
+                        color = limitBarColor,
                         cornerRadius = CornerRadius(2.dp.toPx()),
                         style = Stroke(width = 1.5.dp.toPx())
                     )

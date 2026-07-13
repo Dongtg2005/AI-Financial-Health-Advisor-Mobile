@@ -2,6 +2,14 @@ spring:
   application:
     name: backend
 
+  # Redis caching configurations
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  cache:
+    type: redis
+
   # Database connection details
   datasource:
     url: jdbc:postgresql://localhost:5433/finance_db
